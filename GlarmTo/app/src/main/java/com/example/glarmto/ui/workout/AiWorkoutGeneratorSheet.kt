@@ -1,5 +1,10 @@
 package com.example.glarmto.ui.workout
 
+import androidx.compose.ui.platform.LocalContext
+import com.example.glarmto.data.util.ResourceTexts
+import com.example.glarmto.data.util.labelRes
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -32,6 +37,8 @@ fun AiWorkoutGeneratorSheet(
     val selectedMuscles = remember { mutableStateListOf<MuscleGroup>() }
 
     var previewWorkout by remember { mutableStateOf<GeneratedWorkout?>(null) }
+    val appContext = LocalContext.current.applicationContext as android.app.Application
+    val generatorTexts = remember(appContext) { ResourceTexts(appContext) }
     var isGenerating by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
@@ -48,17 +55,17 @@ fun AiWorkoutGeneratorSheet(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    "AI Workout Generator 🎯",
+                    stringResource(R.string.ai_workout_generator),
                     fontSize = 24.sp,
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                Text("Tell us what you have, and our offline AI will build the perfect routine for you — tuned to your recovery and last session's numbers.")
+                Text(stringResource(R.string.tell_us_what_you_have_and_our_offline_ai_w))
 
                 Divider()
 
                 // 1. Time
-                Text("Available Time: ${timeMins.roundToInt()} minutes", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                Text(stringResource(R.string.f_available_time_minutes, timeMins.roundToInt()), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 Slider(
                     value = timeMins,
                     onValueChange = { timeMins = it },
@@ -67,7 +74,7 @@ fun AiWorkoutGeneratorSheet(
                 )
 
                 // 2. Equipment
-                Text("Available Equipment", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                Text(stringResource(R.string.available_equipment), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(Equipment.values()) { eq ->
                         FilterChip(
@@ -76,13 +83,13 @@ fun AiWorkoutGeneratorSheet(
                                 if (selectedEquipment.contains(eq)) selectedEquipment.remove(eq)
                                 else selectedEquipment.add(eq)
                             },
-                            label = { Text(eq.name) }
+                            label = { Text(stringResource(eq.labelRes())) }
                         )
                     }
                 }
 
                 // 3. Muscle Focus
-                Text("Target Muscles", fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
+                Text(stringResource(R.string.target_muscles), fontWeight = FontWeight.SemiBold, fontSize = 16.sp)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(MuscleGroup.values()) { mc ->
                         FilterChip(
@@ -91,7 +98,7 @@ fun AiWorkoutGeneratorSheet(
                                 if (selectedMuscles.contains(mc)) selectedMuscles.remove(mc)
                                 else selectedMuscles.add(mc)
                             },
-                            label = { Text(mc.name) }
+                            label = { Text(stringResource(mc.labelRes())) }
                         )
                     }
                 }
@@ -103,6 +110,7 @@ fun AiWorkoutGeneratorSheet(
                         isGenerating = true
                         scope.launch {
                             previewWorkout = WorkoutGenerator.generateWorkout(
+                                texts = generatorTexts,
                                 availableTimeMins = timeMins.roundToInt(),
                                 equipmentConstraints = selectedEquipment,
                                 focusMuscles = selectedMuscles,
@@ -117,7 +125,7 @@ fun AiWorkoutGeneratorSheet(
                     if (isGenerating) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary)
                     } else {
-                        Text("GENERATE WORKOUT", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.generate_workout), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -136,7 +144,7 @@ fun AiWorkoutGeneratorSheet(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.primary
                 )
-                Text("${workout.totalTimeMins} minutes • ${workout.exercises.size} exercises")
+                Text(stringResource(R.string.f_minutes_exercises, workout.totalTimeMins, workout.exercises.size))
 
                 workout.warnings.forEach { warning ->
                     Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
@@ -174,7 +182,7 @@ fun AiWorkoutGeneratorSheet(
                                 ) {
                                     Text(ex.name, fontWeight = FontWeight.Bold, fontSize = 16.sp)
                                     val weightText = ex.suggestedWeight?.let { " @ ${it}kg" } ?: ""
-                                    Text("${ex.targetSets} x ${ex.targetReps}$weightText", fontSize = 14.sp)
+                                    Text("${ex.targetSets} × ${ex.targetReps}$weightText", fontSize = 14.sp)
                                 }
                                 ex.note?.let {
                                     Text(
@@ -196,13 +204,13 @@ fun AiWorkoutGeneratorSheet(
                         onClick = { previewWorkout = null },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Regenerate")
+                        Text(stringResource(R.string.regenerate))
                     }
                     Button(
                         onClick = { onWorkoutGenerated(workout) },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Start Workout", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.start_workout), fontWeight = FontWeight.Bold)
                     }
                 }
             }

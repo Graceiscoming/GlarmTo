@@ -1,5 +1,6 @@
 package com.example.glarmto.data.util
 
+import com.example.glarmto.R
 import kotlin.math.round
 import kotlin.math.roundToInt
 import kotlin.random.Random
@@ -60,6 +61,7 @@ object WorkoutGenerator {
         availableTimeMins: Int,
         equipmentConstraints: List<Equipment>,
         focusMuscles: List<MuscleGroup>,
+        texts: AppTexts,
         context: AiGeneratorContext = AiGeneratorContext(),
         now: Long = System.currentTimeMillis(),
         random: Random = Random.Default
@@ -124,7 +126,7 @@ object WorkoutGenerator {
                 .map { it.primaryMuscle }
                 .distinct()
                 .filter { it !in focusMuscles && (weeklyMuscleSets[it] ?: 0) < avgWeeklySets * 0.5 }
-                .forEach { insights.add("💡 ${it.name} has had fewer sets this week, so it got extra focus today.") }
+                .forEach { insights.add(texts.get(R.string.f_gen_insight_under_trained, texts.get(it.labelRes()))) }
         }
 
         // Shuffle the final list for variety
@@ -138,7 +140,7 @@ object WorkoutGenerator {
         if (avgSetsPerExercise != null) {
             val blended = ((setsPerExercise + avgSetsPerExercise) / 2.0).roundToInt()
             if (blended != setsPerExercise) {
-                insights.add("💡 Sets/exercise tuned to your usual session length (you typically do ~${"%.1f".format(avgSetsPerExercise)} sets/exercise).")
+                insights.add(texts.get(R.string.f_gen_insight_sets_tuned, avgSetsPerExercise))
             }
             setsPerExercise = blended
         }
@@ -161,11 +163,11 @@ object WorkoutGenerator {
             if (recovery != null && recovery < LOW_RECOVERY_THRESHOLD && def.primaryMuscle in focusMuscles) {
                 sets = (setsPerExercise - 1).coerceAtLeast(2)
                 val pct = (recovery * 100).toInt()
-                warnings.add("⚠️ ${def.primaryMuscle.name} is only $pct% recovered — sets trimmed, consider going lighter today.")
+                warnings.add(texts.get(R.string.f_gen_warn_low_recovery, texts.get(def.primaryMuscle.labelRes()), pct))
             }
 
             val history = exerciseHistory[def.name]
-            val (suggestedWeight, note) = progressiveOverload(def, reps, history)
+            val (suggestedWeight, note) = progressiveOverload(def, reps, history, texts)
 
             GeneratedExercise(
                 name = def.name,
@@ -176,10 +178,10 @@ object WorkoutGenerator {
             )
         }
 
-        val muscleString = if (focusMuscles.isNotEmpty()) focusMuscles.joinToString(" & ") { it.name } else "Full Body"
+        val muscleString = if (focusMuscles.isNotEmpty()) focusMuscles.joinToString(" & ") { texts.get(it.labelRes()) } else texts.get(R.string.muscle_full_body)
 
         return GeneratedWorkout(
-            title = "AI $muscleString Blast",
+            title = texts.get(R.string.f_gen_title_blast, muscleString),
             totalTimeMins = availableTimeMins,
             exercises = finalExercises,
             warnings = warnings.distinct(),
@@ -236,16 +238,17 @@ object WorkoutGenerator {
     internal fun progressiveOverload(
         def: ExerciseDef,
         targetReps: String,
-        history: ExerciseHistoryStats?
+        history: ExerciseHistoryStats?,
+        texts: AppTexts
     ): Pair<Double?, String?> {
         if (history == null) {
-            val note = if (def.equipment == Equipment.Bodyweight) null else "First time on this one — start light and find your weight."
+            val note = if (def.equipment == Equipment.Bodyweight) null else texts.get(R.string.gen_note_first_time)
             return null to note
         }
 
         // Pure bodyweight work has no load to bump or deload; progress is reps only.
         if (def.equipment == Equipment.Bodyweight && history.lastWeight <= 0.0) {
-            return null to "Last time: ${history.lastReps} reps — try to beat it."
+            return null to texts.get(R.string.f_gen_note_bodyweight, history.lastReps)
         }
 
         val repRangeTop = targetReps.substringAfterLast("-").toIntOrNull()
@@ -257,17 +260,17 @@ object WorkoutGenerator {
         return when {
             isStalled -> {
                 val deloaded = roundToIncrement(history.lastWeight * 0.9, def.equipment)
-                deloaded to "Progress has stalled the last few sessions — deload to %.1fkg to reset and chase reps.".format(deloaded)
+                deloaded to texts.get(R.string.f_gen_note_deload, deloaded)
             }
             hitTop -> {
                 val rounded = roundToIncrement(history.lastWeight * 1.025, def.equipment)
                 // 2.5% of a light weight is smaller than half a plate step and would round back to the same weight.
                 val bumped = if (rounded > history.lastWeight) rounded else history.lastWeight + incrementFor(def.equipment)
                 val delta = bumped - history.lastWeight
-                bumped to "+%.1fkg from last time 💪 (was %.1fkg x %d)".format(delta, history.lastWeight, history.lastReps)
+                bumped to texts.get(R.string.f_gen_note_bump, delta, history.lastWeight, history.lastReps)
             }
             else -> {
-                history.lastWeight to "Same as last time — beat %d reps at %.1fkg.".format(history.lastReps, history.lastWeight)
+                history.lastWeight to texts.get(R.string.f_gen_note_same, history.lastReps, history.lastWeight)
             }
         }
     }

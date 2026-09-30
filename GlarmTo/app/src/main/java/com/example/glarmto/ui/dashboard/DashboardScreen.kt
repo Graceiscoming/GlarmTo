@@ -1,5 +1,9 @@
 package com.example.glarmto.ui.dashboard
 
+import com.example.glarmto.data.util.ResourceTexts
+import com.example.glarmto.ui.util.LanguageToggleButton
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,7 +46,7 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
     OnResume { viewModel.refreshToday() }
 
     val recoveryViewModel: RecoveryViewModel = viewModel(
-        factory = RecoveryViewModelFactory(application.repository)
+        factory = RecoveryViewModelFactory(application.repository, ResourceTexts(application))
     )
 
     val recoveryStatus by recoveryViewModel.recoveryStatus.collectAsState()
@@ -94,54 +98,54 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
     if (showIgCustomizer) {
         AlertDialog(
             onDismissRequest = { showIgCustomizer = false },
-            title = { Text("Customize IG Story", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.customize_ig_story), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = igShowProfile, onCheckedChange = { igShowProfile = it })
-                        Text("Show Profile (Level, Streak)")
+                        Text(stringResource(R.string.show_profile_level_streak))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = igShowTime, onCheckedChange = { igShowTime = it })
-                        Text("Show Workout Time")
+                        Text(stringResource(R.string.show_workout_time))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = igShowCalories, onCheckedChange = { igShowCalories = it })
-                        Text("Show Calories Burned (Estimated)")
+                        Text(stringResource(R.string.show_calories_burned_estimated))
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(checked = igShowExercises, onCheckedChange = { igShowExercises = it })
-                        Text("Show Exercises Summary")
+                        Text(stringResource(R.string.show_exercises_summary))
                     }
                 }
             },
             confirmButton = {
                 Button(onClick = {
                     val durationMinutes = sessions.sumOf { it.durationSeconds } / 60
-                    val timeStr = if (durationMinutes > 0) "${durationMinutes} min" else "< 1 min"
-                    val caloriesStr = "${durationMinutes * 5} kcal"
-                    val exercisesStr = "Sets: ${workouts.size} | Vol: ${totalVolume} kg"
+                    val timeStr = if (durationMinutes > 0) context.getString(R.string.f_minutes_short, durationMinutes.toString()) else context.getString(R.string.less_than_1_min)
+                    val caloriesStr = context.getString(R.string.f_kcal, (durationMinutes * 5).toString())
+                    val exercisesStr = context.getString(R.string.f_ig_sets_volume, workouts.size.toString(), totalVolume.toString())
 
-                    val username = application.repository.getCurrentUser() ?: "Guest"
+                    val username = application.repository.getCurrentUser() ?: context.getString(R.string.guest)
                     viewModel.shareToInstagramStory(
                         username = username,
                         level = level,
                         streak = trainingStreak,
                         showProfile = igShowProfile,
                         showTime = igShowTime,
-                        timeText = "Duration: $timeStr",
+                        timeText = context.getString(R.string.f_ig_duration, timeStr),
                         showCalories = igShowCalories,
-                        caloriesText = "Burned: $caloriesStr",
+                        caloriesText = context.getString(R.string.f_ig_burned, caloriesStr),
                         showExercises = igShowExercises,
                         exercisesText = exercisesStr
                     )
                     showIgCustomizer = false
                 }) {
-                    Text("Share Now")
+                    Text(stringResource(R.string.share_now))
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showIgCustomizer = false }) { Text("Cancel") }
+                TextButton(onClick = { showIgCustomizer = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -155,8 +159,8 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
         item {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = Modifier.weight(1f)) {
-                    val username = application.repository.getCurrentUser() ?: "Guest"
-                    Text("Hello, $username! 💪", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+                    val username = application.repository.getCurrentUser() ?: context.getString(R.string.guest)
+                    Text(stringResource(R.string.f_hello, username), fontSize = 28.sp, fontWeight = FontWeight.Bold)
                     
                     // Level & XP Bar
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 4.dp)) {
@@ -165,7 +169,7 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
-                                "LVL $level", 
+                                stringResource(R.string.f_lvl, level), 
                                 color = Color.White, 
                                 fontSize = 12.sp, 
                                 fontWeight = FontWeight.Bold,
@@ -182,28 +186,28 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                             )
                         }
                         Spacer(Modifier.width(8.dp))
-                        Text("${(xp - threshold)} / $required XP", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.f_xp, (xp - threshold), required), fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 Row {
                     var showHistoryMenu by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { showHistoryMenu = true }) {
-                            Icon(Icons.Filled.History, contentDescription = "History")
+                            Icon(Icons.Filled.History, contentDescription = stringResource(R.string.history))
                         }
                         DropdownMenu(
                             expanded = showHistoryMenu,
                             onDismissRequest = { showHistoryMenu = false }
                         ) {
                             DropdownMenuItem(
-                                text = { Text("Daily View (ประวัติรายวัน)") },
+                                text = { Text(stringResource(R.string.daily_view)) },
                                 onClick = { 
                                     showHistoryMenu = false
                                     onNavigateToHistory(false) 
                                 }
                             )
                             DropdownMenuItem(
-                                text = { Text("Monthly View (ประวัติรายเดือน)") },
+                                text = { Text(stringResource(R.string.monthly_view)) },
                                 onClick = { 
                                     showHistoryMenu = false
                                     onNavigateToHistory(true) 
@@ -211,10 +215,11 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                             )
                         }
                     }
+                    LanguageToggleButton(application.languageManager)
                     var showThemeMenu by remember { mutableStateOf(false) }
                     Box {
                         IconButton(onClick = { showThemeMenu = true }) {
-                            Icon(Icons.Filled.Palette, contentDescription = "Themes")
+                            Icon(Icons.Filled.Palette, contentDescription = stringResource(R.string.themes))
                         }
                         DropdownMenu(
                             expanded = showThemeMenu,
@@ -232,7 +237,7 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                         }
                     }
                     IconButton(onClick = onLogout) {
-                        Icon(Icons.Filled.Logout, contentDescription = "Logout", tint = MaterialTheme.colorScheme.error)
+                        Icon(Icons.Filled.Logout, contentDescription = stringResource(R.string.logout), tint = MaterialTheme.colorScheme.error)
                     }
                 }
             }
@@ -247,10 +252,10 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                     }, 
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Share to IG Story", fontSize = 12.sp)
+                    Text(stringResource(R.string.share_to_ig_story), fontSize = 12.sp)
                 }
                 OutlinedButton(onClick = { viewModel.shareExportJson() }, modifier = Modifier.weight(1f)) {
-                    Text("Export JSON", fontSize = 12.sp)
+                    Text(stringResource(R.string.export_json), fontSize = 12.sp)
                 }
             }
         }
@@ -264,8 +269,8 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text("Training insights", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                    Text("Current streak: $trainingStreak day(s) with at least one set", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.training_insights), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    Text(stringResource(R.string.f_current_streak_day_s_with_at_least_one_set, trainingStreak), fontWeight = FontWeight.SemiBold)
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -273,12 +278,12 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                         FilterChip(
                             selected = statsPeriodDays == 7,
                             onClick = { viewModel.setStatsPeriodDays(7) },
-                            label = { Text("7 days") }
+                            label = { Text(stringResource(R.string.n_7_days)) }
                         )
                         FilterChip(
                             selected = statsPeriodDays == 30,
                             onClick = { viewModel.setStatsPeriodDays(30) },
-                            label = { Text("30 days") }
+                            label = { Text(stringResource(R.string.n_30_days)) }
                         )
                     }
                     Text(
@@ -289,7 +294,7 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                     
                     if (heatmapData.size == 91) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Contribution Activity", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                        Text(stringResource(R.string.contribution_activity), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth().padding(top = 4.dp)) {
                             for (col in 0 until 13) {
                                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -331,8 +336,8 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                         Icon(Icons.Filled.LocalDrink, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
                         Column {
-                            Text("Water today", fontWeight = FontWeight.Bold)
-                            Text("$todayWater / $waterGoal ml", style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(R.string.water_today), fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.f_ml, todayWater, waterGoal), style = MaterialTheme.typography.bodyMedium)
                         }
                     }
                     LinearProgressIndicator(
@@ -358,9 +363,9 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.LocalFireDepartment, contentDescription = "Workout", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.LocalFireDepartment, contentDescription = stringResource(R.string.workout), tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
-                        Text("Workout Summary", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.workout_summary), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
                     Divider()
                     Row(
@@ -368,12 +373,12 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("Total Sets", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.total_sets), color = MaterialTheme.colorScheme.onSurfaceVariant)
                             Text("$totalSets", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("Total Volume", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text("$totalVolume kg", fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
+                            Text(stringResource(R.string.total_volume), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(stringResource(R.string.f_kg, totalVolume), fontSize = 24.sp, fontWeight = FontWeight.ExtraBold)
                         }
                     }
                 }
@@ -391,19 +396,19 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Filled.Star, contentDescription = "Nutrition", tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.Star, contentDescription = stringResource(R.string.nutrition), tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(8.dp))
-                        Text("Nutrition Summary", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.nutrition_summary), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
                     Divider()
-                    Text("Consumed: $totalConsumed kcal  |  Remaining: $remaining kcal", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.f_consumed_kcal_remaining_kcal, totalConsumed, remaining), fontWeight = FontWeight.SemiBold)
                     LinearProgressIndicator(
                         progress = { progress },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(14.dp)
                     )
-                    Text("Daily Goal: $dailyGoal kcal", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.f_daily_goal_kcal, dailyGoal), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
         }
@@ -418,7 +423,7 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("Weekly Volume Progress", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.weekly_volume_progress), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     
                     if (weeklyVolume.isEmpty()) {
                         CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
@@ -471,7 +476,7 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("💪 Muscle Recovery", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.muscle_recovery), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                         Icon(
                             imageVector = if (showRecovery) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
                             contentDescription = null
@@ -488,7 +493,7 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
                                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
                             ) {
                                 Column(modifier = Modifier.padding(12.dp)) {
-                                    Text("AI Recommendation", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    Text(stringResource(R.string.ai_recommendation), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                     Text(smartRecommendation, fontSize = 14.sp)
                                 }
                             }

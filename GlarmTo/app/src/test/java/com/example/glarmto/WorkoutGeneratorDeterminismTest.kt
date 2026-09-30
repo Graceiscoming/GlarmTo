@@ -1,5 +1,6 @@
 package com.example.glarmto
 
+import com.example.glarmto.testsupport.TestTexts
 import com.example.glarmto.data.util.Equipment
 import com.example.glarmto.data.util.MuscleGroup
 import com.example.glarmto.data.util.WorkoutGenerator
@@ -10,6 +11,7 @@ import kotlin.random.Random
 class WorkoutGeneratorDeterminismTest {
 
     private fun generate(seed: Int) = WorkoutGenerator.generateWorkout(
+        texts = TestTexts.english,
         availableTimeMins = 60,
         equipmentConstraints = listOf(Equipment.Barbell, Equipment.Dumbbell),
         focusMuscles = listOf(MuscleGroup.Chest, MuscleGroup.Back),

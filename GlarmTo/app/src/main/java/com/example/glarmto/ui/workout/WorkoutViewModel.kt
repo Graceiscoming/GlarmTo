@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.workout
 
+import com.example.glarmto.data.util.AppTexts
+import com.example.glarmto.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -32,6 +34,7 @@ import java.util.Calendar
 
 class WorkoutViewModel(
     private val repository: GlarmToRepository,
+    private val texts: AppTexts,
     todayProvider: () -> Long = CalendarDayUtils::localTodayStartMillis
 ) : ViewModel() {
 
@@ -72,13 +75,13 @@ class WorkoutViewModel(
                 val rpe = lastWorkout.rpe ?: 0
                 val reps = lastWorkout.reps
                 if (rpe in 1..7) {
-                    _smartSuggestion.value = "Suggestion: Try ${(weight + 2.5)}kg (Last time: ${weight}kg, RPE $rpe)"
+                    _smartSuggestion.value = texts.get(R.string.f_sugg_try_heavier, weight + 2.5, weight, rpe)
                 } else if (rpe in 8..9) {
-                    _smartSuggestion.value = "Suggestion: Target ${weight}kg for ${reps + 1} reps (Last time: RPE $rpe)"
+                    _smartSuggestion.value = texts.get(R.string.f_sugg_more_reps, weight, reps + 1, rpe)
                 } else if (rpe == 10) {
-                    _smartSuggestion.value = "Suggestion: Stay at ${weight}kg or drop to ${(weight - 2.5).coerceAtLeast(0.0)}kg (Last time: RPE 10)"
+                    _smartSuggestion.value = texts.get(R.string.f_sugg_stay_or_drop, weight, (weight - 2.5).coerceAtLeast(0.0))
                 } else {
-                    _smartSuggestion.value = "Suggestion: Last time you did ${weight}kg x $reps reps. Try to beat it!"
+                    _smartSuggestion.value = texts.get(R.string.f_sugg_beat_last, weight, reps)
                 }
             }
         }
@@ -340,11 +343,14 @@ class WorkoutViewModel(
     }
 }
 
-class WorkoutViewModelFactory(private val repository: GlarmToRepository) : ViewModelProvider.Factory {
+class WorkoutViewModelFactory(
+    private val repository: GlarmToRepository,
+    private val texts: AppTexts
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(WorkoutViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return WorkoutViewModel(repository) as T
+            return WorkoutViewModel(repository, texts) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

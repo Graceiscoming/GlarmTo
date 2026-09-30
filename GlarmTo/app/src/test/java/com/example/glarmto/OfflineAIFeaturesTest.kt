@@ -1,5 +1,6 @@
 package com.example.glarmto
 
+import com.example.glarmto.testsupport.TestTexts
 import com.example.glarmto.data.local.entity.WorkoutEntity
 import com.example.glarmto.data.repository.GlarmToRepository
 import com.example.glarmto.data.util.Equipment
@@ -32,6 +33,7 @@ class OfflineAIFeaturesTest {
     fun testWorkoutGenerator_timeConstraints() {
         // Given 30 mins, constraint = Dumbbell, focus = Chest
         val result = WorkoutGenerator.generateWorkout(
+            texts = TestTexts.english,
             availableTimeMins = 30,
             equipmentConstraints = listOf(Equipment.Dumbbell),
             focusMuscles = listOf(MuscleGroup.Chest)
@@ -52,6 +54,7 @@ class OfflineAIFeaturesTest {
     fun testWorkoutGenerator_equipmentConstraints() {
         // Given only specific equipment
         val result = WorkoutGenerator.generateWorkout(
+            texts = TestTexts.english,
             availableTimeMins = 45,
             equipmentConstraints = listOf(Equipment.Barbell),
             focusMuscles = listOf(MuscleGroup.Legs)
@@ -82,7 +85,7 @@ class OfflineAIFeaturesTest {
         dao.insertWorkout(WorkoutEntity(1, "Bench Press", weight = 50.0, reps = 10, dateInMillis = now, username = "testuser"))
         dao.insertWorkout(WorkoutEntity(2, "Bench Press", weight = 50.0, reps = 10, dateInMillis = now, username = "testuser"))
 
-        val viewModel = RecoveryViewModel(repo)
+        val viewModel = RecoveryViewModel(repo, TestTexts.english)
         
         // Wait for IO coroutine to emit by using flow.first()
         val recoveryList = viewModel.recoveryStatus.first { it.isNotEmpty() }
@@ -116,7 +119,7 @@ class OfflineAIFeaturesTest {
             dao.insertWorkout(WorkoutEntity(i, "Squat", weight = 100.0, reps = 8, dateInMillis = twentyFourHoursAgo, username = "testuser"))
         }
 
-        val viewModel = RecoveryViewModel(repo)
+        val viewModel = RecoveryViewModel(repo, TestTexts.english)
         
         // Wait for IO coroutine to emit by using flow.first()
         val recoveryList = viewModel.recoveryStatus.first { it.isNotEmpty() }

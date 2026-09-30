@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.dashboard
 
+import com.example.glarmto.data.util.ResourceTexts
+import com.example.glarmto.R
 import android.app.Application
 import android.content.Intent
 import androidx.lifecycle.AndroidViewModel
@@ -42,6 +44,8 @@ class DashboardViewModel(
     private val repository: GlarmToRepository,
     todayProvider: () -> Long = CalendarDayUtils::localTodayStartMillis
 ) : AndroidViewModel(application) {
+
+    private val texts = ResourceTexts(application)
 
     // "Today" must follow the calendar, not the moment this ViewModel was created.
     private val dayTracker = TodayTracker(todayProvider)
@@ -109,9 +113,9 @@ class DashboardViewModel(
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, text)
-                putExtra(Intent.EXTRA_SUBJECT, "GlarmTo backup (JSON)")
+                putExtra(Intent.EXTRA_SUBJECT, texts.get(R.string.backup_subject_json))
             }
-            val chooser = Intent.createChooser(send, "Export JSON")
+            val chooser = Intent.createChooser(send, texts.get(R.string.export_json))
             chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             application.startActivity(chooser)
         }
@@ -124,9 +128,9 @@ class DashboardViewModel(
             val send = Intent(Intent.ACTION_SEND).apply {
                 type = "text/plain"
                 putExtra(Intent.EXTRA_TEXT, text)
-                putExtra(Intent.EXTRA_SUBJECT, "GlarmTo backup (CSV)")
+                putExtra(Intent.EXTRA_SUBJECT, texts.get(R.string.backup_subject_csv))
             }
-            val chooser = Intent.createChooser(send, "Export CSV")
+            val chooser = Intent.createChooser(send, texts.get(R.string.export_csv))
             chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             application.startActivity(chooser)
         }
@@ -153,6 +157,10 @@ class DashboardViewModel(
                 username = username,
                 level = level,
                 streak = streak,
+                brandText = texts.get(R.string.ig_brand),
+                levelText = texts.get(R.string.f_ig_level, level),
+                streakText = texts.get(R.string.f_ig_streak, streak),
+                chooserTitle = texts.get(R.string.share_to_story),
                 showProfile = showProfile,
                 showTime = showTime,
                 timeText = timeText,

@@ -1,5 +1,10 @@
 package com.example.glarmto.ui.workout
 
+import androidx.compose.ui.platform.LocalConfiguration
+import com.example.glarmto.data.util.ResourceTexts
+import com.example.glarmto.R
+import com.example.glarmto.ui.util.findActivity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -184,9 +189,10 @@ fun parseVoiceCommand(command: String): Triple<String, String, String>? {
 @Composable
 fun WorkoutScreen() {
     val context = LocalContext.current
+    val speechLanguageTag = LocalConfiguration.current.locales[0].toLanguageTag()
     val application = context.applicationContext as GlarmToApplication
     val viewModel: WorkoutViewModel = viewModel(
-        factory = WorkoutViewModelFactory(application.repository)
+        factory = WorkoutViewModelFactory(application.repository, ResourceTexts(application))
     )
 
     OnResume { viewModel.refreshToday() }
@@ -220,10 +226,10 @@ fun WorkoutScreen() {
     if (showNoInternetDialog) {
         AlertDialog(
             onDismissRequest = { showNoInternetDialog = false },
-            title = { Text("No Internet Connection", fontWeight = FontWeight.Bold) },
-            text = { Text("กรุณาเชื่อมต่อ internet เพื่อใช้งานฟังก์ชันนี้ (Please connect to the internet to use this feature.)") },
+            title = { Text(stringResource(R.string.no_internet_connection), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.please_connect_to_the_internet_to_use_this)) },
             confirmButton = {
-                TextButton(onClick = { showNoInternetDialog = false }) { Text("OK") }
+                TextButton(onClick = { showNoInternetDialog = false }) { Text(stringResource(R.string.ok)) }
             }
         )
     }
@@ -258,7 +264,7 @@ fun WorkoutScreen() {
     var isPipMode by remember { mutableStateOf(false) }
     
     DisposableEffect(context, isTimerRunning) {
-        val activity = context as? com.example.glarmto.MainActivity
+        val activity = context.findActivity() as? com.example.glarmto.MainActivity
         
         val pipListener = androidx.core.util.Consumer<androidx.core.app.PictureInPictureModeChangedInfo> { info ->
             isPipMode = info.isInPictureInPictureMode
@@ -385,10 +391,10 @@ fun WorkoutScreen() {
                         viewModel.setSelectedDateFromMaterialPicker(it)
                     }
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -409,7 +415,7 @@ fun WorkoutScreen() {
                         val goalCal = user?.dailyGoal ?: 2500
 
                         Text(
-                            "Ready to crush it?",
+                            stringResource(R.string.ready_to_crush_it),
                             fontSize = 28.sp,
                             fontWeight = FontWeight.ExtraBold
                         )
@@ -422,14 +428,14 @@ fun WorkoutScreen() {
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    "Daily Output Summary",
+                                    stringResource(R.string.daily_output_summary),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 18.sp
                                 )
-                                Text("Target Calories: $goalCal kcal")
-                                Text("Eaten: $totalCal kcal")
+                                Text(stringResource(R.string.f_target_calories_kcal, goalCal))
+                                Text(stringResource(R.string.f_eaten_kcal, totalCal))
                                 Text(
-                                    "Remaining: ${goalCal - totalCal} kcal",
+                                    stringResource(R.string.f_remaining_kcal, goalCal - totalCal),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -442,7 +448,7 @@ fun WorkoutScreen() {
                                 modifier = Modifier.weight(1f).height(64.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
-                                Text("START", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.start), fontSize = 20.sp, fontWeight = FontWeight.Bold)
                             }
                             OutlinedButton(
                                 onClick = { 
@@ -456,7 +462,7 @@ fun WorkoutScreen() {
                             ) {
                                 Icon(Icons.Filled.Star, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 Spacer(Modifier.width(8.dp))
-                                Text("AI WORKOUT", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.ai_workout), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                         
@@ -466,7 +472,7 @@ fun WorkoutScreen() {
                         ) {
                             Icon(Icons.Filled.Videocam, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
                             Spacer(Modifier.width(8.dp))
-                            Text("AI FORM TRACKER (CAMERA)", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                            Text(stringResource(R.string.ai_form_tracker_camera), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
                         }
                     } else {
                         Card(
@@ -492,7 +498,7 @@ fun WorkoutScreen() {
                                     },
                                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                                 ) {
-                                    Text("FINISH")
+                                    Text(stringResource(R.string.finish))
                                 }
                             }
                         }
@@ -512,13 +518,13 @@ fun WorkoutScreen() {
                         }
                         AlertDialog(
                             onDismissRequest = { showFinishDialog = false },
-                            title = { Text("Workout Summary", fontWeight = FontWeight.Bold) },
+                            title = { Text(stringResource(R.string.workout_summary), fontWeight = FontWeight.Bold) },
                             text = {
                                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                                     if (estimatedCalories > 0) {
                                         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)) {
                                             Text(
-                                                "🔥 AI-estimated calories burned: ~$estimatedCalories kcal",
+                                                stringResource(R.string.f_ai_estimated_calories_burned_kcal, estimatedCalories),
                                                 modifier = Modifier.padding(12.dp),
                                                 fontWeight = FontWeight.SemiBold,
                                                 color = MaterialTheme.colorScheme.onTertiaryContainer
@@ -528,18 +534,18 @@ fun WorkoutScreen() {
                                     OutlinedTextField(
                                         value = finishSessionName,
                                         onValueChange = { finishSessionName = it },
-                                        label = { Text("Session Name (e.g., Heavy Leg Day)") },
+                                        label = { Text(stringResource(R.string.session_name_e_g_heavy_leg_day)) },
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                     OutlinedTextField(
                                         value = finishNotes,
                                         onValueChange = { finishNotes = it },
-                                        label = { Text("Notes (How did it go?)") },
+                                        label = { Text(stringResource(R.string.notes_how_did_it_go)) },
                                         modifier = Modifier.fillMaxWidth(),
                                         minLines = 3
                                     )
 
-                                    Text("Exhaustion Level", fontWeight = FontWeight.SemiBold)
+                                    Text(stringResource(R.string.exhaustion_level), fontWeight = FontWeight.SemiBold)
                                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         (1..5).forEach { level ->
                                             Icon(
@@ -552,7 +558,7 @@ fun WorkoutScreen() {
                                         }
                                     }
 
-                                    Text("Satisfaction Level", fontWeight = FontWeight.SemiBold)
+                                    Text(stringResource(R.string.satisfaction_level), fontWeight = FontWeight.SemiBold)
                                     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                         (1..5).forEach { level ->
                                             Icon(
@@ -584,12 +590,12 @@ fun WorkoutScreen() {
                                     satisfactionLevel = 3
                                     isShowingConfetti = true
                                 }) {
-                                    Text("SAVE & FINISH")
+                                    Text(stringResource(R.string.save_finish))
                                 }
                             },
                             dismissButton = {
                                 TextButton(onClick = { showFinishDialog = false }) {
-                                    Text("Cancel")
+                                    Text(stringResource(R.string.cancel))
                                 }
                             }
                         )
@@ -617,7 +623,7 @@ fun WorkoutScreen() {
                                     Icon(Icons.Filled.Timer, contentDescription = null)
                                     Spacer(Modifier.width(8.dp))
                                     Text(
-                                        "Resting...",
+                                        stringResource(R.string.resting),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 18.sp
                                     )
@@ -642,7 +648,7 @@ fun WorkoutScreen() {
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        "${restTimeSeconds}s",
+                                        stringResource(R.string.f_seconds_short, restTimeSeconds),
                                         fontSize = 24.sp,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = MaterialTheme.colorScheme.primary
@@ -653,13 +659,13 @@ fun WorkoutScreen() {
                                             else restTimeSeconds = 1
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         }) {
-                                            Text("-30s")
+                                            Text(stringResource(R.string.n_30s))
                                         }
                                         TextButton(onClick = {
                                             restTimeSeconds += 30; initialRestTime += 30
                                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         }) {
-                                            Text("+30s")
+                                            Text(stringResource(R.string.n_30s_2))
                                         }
                                         Button(
                                             onClick = {
@@ -667,7 +673,7 @@ fun WorkoutScreen() {
                                             },
                                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                                         ) {
-                                            Text("Skip")
+                                            Text(stringResource(R.string.skip))
                                         }
                                     }
                                 }
@@ -685,7 +691,7 @@ fun WorkoutScreen() {
                         )
                         Column {
                             Text(
-                                "Workout on $dateStr",
+                                stringResource(R.string.f_workout_on, dateStr),
                                 fontSize = 22.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -700,14 +706,14 @@ fun WorkoutScreen() {
                                     contentPadding = PaddingValues(0.dp),
                                     modifier = Modifier.height(32.dp)
                                 ) {
-                                    Text("Go to Today", fontSize = 14.sp)
+                                    Text(stringResource(R.string.go_to_today), fontSize = 14.sp)
                                 }
                             }
                         }
                         IconButton(onClick = { showDatePicker = true }) {
                             Icon(
                                 Icons.Filled.CalendarMonth,
-                                contentDescription = "Change Date",
+                                contentDescription = stringResource(R.string.change_date),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
@@ -721,13 +727,14 @@ fun WorkoutScreen() {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("Log Exercise", fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.log_exercise), fontWeight = FontWeight.SemiBold)
                                 IconButton(
                                     onClick = {
                                         if (NetworkUtil.isInternetAvailable(context)) {
                                             val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
                                                 putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                                putExtra(RecognizerIntent.EXTRA_PROMPT, "Say e.g.: Squat 100 kg 8 reps")
+                                                putExtra(RecognizerIntent.EXTRA_PROMPT, context.getString(R.string.voice_prompt))
+                                                putExtra(RecognizerIntent.EXTRA_LANGUAGE, speechLanguageTag)
                                             }
                                             try {
                                                 speechLauncher.launch(intent)
@@ -740,7 +747,7 @@ fun WorkoutScreen() {
                                     },
                                     modifier = Modifier.padding(start = 4.dp).size(32.dp)
                                 ) {
-                                    Icon(Icons.Filled.Mic, contentDescription = "Voice Log", tint = MaterialTheme.colorScheme.primary)
+                                    Icon(Icons.Filled.Mic, contentDescription = stringResource(R.string.voice_log), tint = MaterialTheme.colorScheme.primary)
                                 }
                             }
                             if (customRoutines.isNotEmpty()) {
@@ -752,9 +759,9 @@ fun WorkoutScreen() {
                                         showRoutineDialog = true
                                     }
                                 }) {
-                                    Icon(Icons.Filled.ListAlt, contentDescription = "Load")
+                                    Icon(Icons.Filled.ListAlt, contentDescription = stringResource(R.string.load))
                                     Spacer(Modifier.width(4.dp))
-                                    Text(if (routineQueue.isNotEmpty()) "Next: ${routineQueue.first()} (${routineQueue.size})" else "Load Routine")
+                                    Text(if (routineQueue.isNotEmpty()) stringResource(R.string.f_next_routine_item, routineQueue.first(), routineQueue.size) else stringResource(R.string.load_routine))
                                 }
                             }
                         }
@@ -780,7 +787,7 @@ fun WorkoutScreen() {
                                             expanded =
                                                 it.isNotBlank() && filteredExercises.isNotEmpty()
                                         },
-                                        label = { Text("Exercise Name (e.g., Bench Press)") },
+                                        label = { Text(stringResource(R.string.exercise_name_e_g_bench_press)) },
                                         modifier = Modifier.fillMaxWidth()
                                     )
 
@@ -819,14 +826,14 @@ fun WorkoutScreen() {
                                     OutlinedTextField(
                                         value = weight,
                                         onValueChange = { weight = it },
-                                        label = { Text("Weight (kg)") },
+                                        label = { Text(stringResource(R.string.weight_kg)) },
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         modifier = Modifier.weight(1f)
                                     )
                                     OutlinedTextField(
                                         value = reps,
                                         onValueChange = { reps = it },
-                                        label = { Text("Reps") },
+                                        label = { Text(stringResource(R.string.reps)) },
                                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         modifier = Modifier.weight(1f)
                                     )
@@ -836,7 +843,7 @@ fun WorkoutScreen() {
                                     onValueChange = {
                                         rpe = it.filter { ch -> ch.isDigit() }.take(2)
                                     },
-                                    label = { Text("RPE (1–10, optional)") },
+                                    label = { Text(stringResource(R.string.rpe_1_10_optional)) },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true
@@ -848,7 +855,7 @@ fun WorkoutScreen() {
                                     val oneRm =
                                         if (rInput == 1.0) wInput else wInput * (1 + 0.0333 * rInput)
                                     Text(
-                                        text = "Estimated 1RM: ${((oneRm * 10.0).roundToInt() / 10.0)} kg",
+                                        text = stringResource(R.string.f_estimated_1rm_kg, ((oneRm * 10.0).roundToInt() / 10.0)),
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -891,7 +898,7 @@ fun WorkoutScreen() {
                                         modifier = Modifier.weight(1f),
                                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                                     ) {
-                                        Text("Add Set")
+                                        Text(stringResource(R.string.add_set))
                                     }
 
                                     // Copy Previous Set
@@ -909,18 +916,18 @@ fun WorkoutScreen() {
                                     ) {
                                         Icon(
                                             Icons.Filled.ContentCopy,
-                                            contentDescription = "Copy",
+                                            contentDescription = stringResource(R.string.copy),
                                             modifier = Modifier.size(18.dp)
                                         )
                                         Spacer(Modifier.width(4.dp))
-                                        Text("Copy Last")
+                                        Text(stringResource(R.string.copy_last))
                                     }
                                 }
                                 OutlinedButton(
                                     onClick = { viewModel.copyWorkoutsFromYesterday() },
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text("Copy all sets from yesterday")
+                                    Text(stringResource(R.string.copy_all_sets_from_yesterday))
                                 }
                             }
                         }
@@ -930,7 +937,7 @@ fun WorkoutScreen() {
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                         ) {
                             Text(
-                                "Editing past data is disabled. You can only log workouts for yesterday or today.",
+                                stringResource(R.string.editing_past_data_is_disabled_you_can_only_2),
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 modifier = Modifier.padding(16.dp),
                                 fontSize = 14.sp
@@ -944,7 +951,7 @@ fun WorkoutScreen() {
 
             if (isWorkingOut) {
                 item {
-                    Text("Current Session Sets:", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.current_session_sets), fontWeight = FontWeight.SemiBold)
                 }
                 items(workouts) { workout ->
                     Card(
@@ -970,7 +977,7 @@ fun WorkoutScreen() {
                                 } else ""
                                 val rpeTxt = workout.rpe?.let { pr -> " · RPE $pr" } ?: ""
                                 Text(
-                                    "${w} kg x ${r} reps$rmText$rpeTxt",
+                                    stringResource(R.string.f_kg_x_reps_2, w, r, rmText, rpeTxt),
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -978,7 +985,7 @@ fun WorkoutScreen() {
                                 IconButton(onClick = { viewModel.deleteWorkout(workout.id) }) {
                                     Icon(
                                         Icons.Filled.Delete,
-                                        contentDescription = "Delete",
+                                        contentDescription = stringResource(R.string.delete),
                                         tint = MaterialTheme.colorScheme.error
                                     )
                                 }
@@ -991,7 +998,7 @@ fun WorkoutScreen() {
                 val matchedSessionIds = mutableSetOf<Int?>()
 
                 item {
-                    Text("Logged Sessions:", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.logged_sessions), fontWeight = FontWeight.SemiBold)
                 }
                 // Show Sessions
                 items(sessions) { session ->
@@ -1011,14 +1018,14 @@ fun WorkoutScreen() {
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        session.sessionName.ifBlank { "Session ${session.sessionId}" },
+                                        session.sessionName.ifBlank { stringResource(R.string.f_session, session.sessionId) },
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 18.sp
                                     )
                                     val mm = session.durationSeconds / 60
                                     val ss = session.durationSeconds % 60
                                     Text(
-                                        "${sessionWorkouts.size} sets • Duration: $mm min $ss sec",
+                                        stringResource(R.string.f_sets_duration_min_sec, sessionWorkouts.size, mm, ss),
                                         color = MaterialTheme.colorScheme.primary,
                                         fontSize = 14.sp
                                     )
@@ -1040,7 +1047,7 @@ fun WorkoutScreen() {
                                     }
                                     Icon(
                                         imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                        contentDescription = "Expand"
+                                        contentDescription = stringResource(R.string.expand)
                                     )
                                 }
                             }
@@ -1053,7 +1060,7 @@ fun WorkoutScreen() {
                                 ) {
                                     if (session.notes.isNotBlank()) {
                                         Text(
-                                            "Notes:",
+                                            stringResource(R.string.notes),
                                             fontWeight = FontWeight.SemiBold,
                                             fontSize = 14.sp
                                         )
@@ -1075,7 +1082,7 @@ fun WorkoutScreen() {
                                     ) {
                                         Column {
                                             Text(
-                                                "Exhaustion",
+                                                stringResource(R.string.exhaustion),
                                                 fontSize = 12.sp,
                                                 color = MaterialTheme.colorScheme.outline
                                             )
@@ -1092,7 +1099,7 @@ fun WorkoutScreen() {
                                         }
                                         Column {
                                             Text(
-                                                "Satisfaction",
+                                                stringResource(R.string.satisfaction),
                                                 fontSize = 12.sp,
                                                 color = MaterialTheme.colorScheme.outline
                                             )
@@ -1129,7 +1136,7 @@ fun WorkoutScreen() {
                                                 val rpeTxt =
                                                     workout.rpe?.let { pr -> " · RPE $pr" } ?: ""
                                                 Text(
-                                                    "${workout.weight} kg x ${workout.reps} reps$rpeTxt",
+                                                    stringResource(R.string.f_kg_x_reps_3, workout.weight, workout.reps, rpeTxt),
                                                     fontSize = 14.sp
                                                 )
                                             }
@@ -1141,7 +1148,7 @@ fun WorkoutScreen() {
                                                 }) {
                                                     Icon(
                                                         Icons.Filled.Delete,
-                                                        contentDescription = "Delete",
+                                                        contentDescription = stringResource(R.string.delete),
                                                         tint = MaterialTheme.colorScheme.error,
                                                         modifier = Modifier.size(20.dp)
                                                     )
@@ -1181,19 +1188,19 @@ fun WorkoutScreen() {
                                 ) {
                                     Column {
                                         Text(
-                                            "Uncategorized Sets",
+                                            stringResource(R.string.uncategorized_sets),
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 18.sp
                                         )
                                         Text(
-                                            "${unmatchedWorkouts.size} sets",
+                                            stringResource(R.string.f_sets, unmatchedWorkouts.size),
                                             color = MaterialTheme.colorScheme.primary,
                                             fontSize = 14.sp
                                         )
                                     }
                                     Icon(
                                         imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                        contentDescription = "Expand"
+                                        contentDescription = stringResource(R.string.expand)
                                     )
                                 }
                                 AnimatedVisibility(visible = expanded) {
@@ -1217,7 +1224,7 @@ fun WorkoutScreen() {
                                                         workout.rpe?.let { pr -> " · RPE $pr" }
                                                             ?: ""
                                                     Text(
-                                                        "${workout.weight} kg x ${workout.reps} reps$rpeTxt",
+                                                        stringResource(R.string.f_kg_x_reps_3, workout.weight, workout.reps, rpeTxt),
                                                         fontSize = 14.sp
                                                     )
                                                 }
@@ -1229,7 +1236,7 @@ fun WorkoutScreen() {
                                                     }) {
                                                         Icon(
                                                             Icons.Filled.Delete,
-                                                            contentDescription = "Delete",
+                                                            contentDescription = stringResource(R.string.delete),
                                                             tint = MaterialTheme.colorScheme.error,
                                                             modifier = Modifier.size(20.dp)
                                                         )
@@ -1255,7 +1262,7 @@ fun WorkoutScreen() {
         if (showRoutineDialog && customRoutines.isNotEmpty()) {
             AlertDialog(
                 onDismissRequest = { showRoutineDialog = false },
-                title = { Text("Select a Routine") },
+                title = { Text(stringResource(R.string.select_a_routine)) },
                 text = {
                     LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                         items(customRoutines) { routine ->
@@ -1285,7 +1292,7 @@ fun WorkoutScreen() {
                 },
                 confirmButton = {
                     TextButton(onClick = { showRoutineDialog = false }) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )

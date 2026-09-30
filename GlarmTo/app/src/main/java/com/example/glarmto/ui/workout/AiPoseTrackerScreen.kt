@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.workout
 
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import android.Manifest
 import android.util.Log
 import android.view.ViewGroup
@@ -49,7 +51,7 @@ fun AiPoseTrackerScreen(onClose: () -> Unit) {
     var detectedPose by remember { mutableStateOf<Pose?>(null) }
     var scaleFactorX by remember { mutableStateOf(1f) }
     var scaleFactorY by remember { mutableStateOf(1f) }
-    var feedbackText by remember { mutableStateOf("Stand in front of camera") }
+    var feedbackRes by remember { mutableStateOf(R.string.pose_stand_in_front) }
 
     LaunchedEffect(Unit) {
         if (!cameraPermissionState.status.isGranted) {
@@ -119,14 +121,14 @@ fun AiPoseTrackerScreen(onClose: () -> Unit) {
                                             
                                             val angle = PoseAngleMath.getAngle(hip, knee, ankle)
                                             if (angle < 90) {
-                                                feedbackText = "Good Depth!"
+                                                feedbackRes = R.string.pose_good_depth
                                             } else if (angle < 140) {
-                                                feedbackText = "Go Lower!"
+                                                feedbackRes = R.string.pose_go_lower
                                             } else {
-                                                feedbackText = "Standing"
+                                                feedbackRes = R.string.pose_standing
                                             }
                                         } else {
-                                            feedbackText = "Full body not visible"
+                                            feedbackRes = R.string.pose_not_visible
                                         }
                                     }
                                     .addOnCompleteListener { imageProxy.close() }
@@ -226,18 +228,18 @@ fun AiPoseTrackerScreen(onClose: () -> Unit) {
                     horizontalArrangement = Arrangement.Start
                 ) {
                     IconButton(onClick = onClose, colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha=0.5f))) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close), tint = Color.White)
                     }
                 }
                 
                 Spacer(modifier = Modifier.weight(1f))
                 
                 Surface(
-                    color = if (feedbackText == "Good Depth!") Color(0xFF4CAF50).copy(alpha = 0.8f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                    color = if (feedbackRes == R.string.pose_good_depth) Color(0xFF4CAF50).copy(alpha = 0.8f) else MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
                     shape = MaterialTheme.shapes.large
                 ) {
                     Text(
-                        text = feedbackText,
+                        text = stringResource(feedbackRes),
                         modifier = Modifier.padding(24.dp),
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color.White
@@ -253,10 +255,10 @@ fun AiPoseTrackerScreen(onClose: () -> Unit) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Camera permission is required.")
+            Text(stringResource(R.string.camera_permission_is_required))
             Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
-                Text("Grant Permission")
+                Text(stringResource(R.string.grant_permission))
             }
         }
     }

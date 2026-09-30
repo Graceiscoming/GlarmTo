@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.routines
 
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -35,7 +37,7 @@ fun RoutinesScreen() {
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = { showCreateDialog = true }) {
-                Icon(Icons.Filled.Add, contentDescription = "Create Routine")
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.create_routine))
             }
         }
     ) { innerPadding ->
@@ -46,13 +48,13 @@ fun RoutinesScreen() {
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text("My Customs Routines", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            Text("Create presets templates to quickly start your workout sessions.", color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.my_customs_routines), fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.create_presets_templates_to_quickly_start), color = MaterialTheme.colorScheme.onSurfaceVariant)
             Divider()
 
             if (routines.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No routines created yet. Click + to add one!")
+                    Text(stringResource(R.string.no_routines_created_yet_click_to_add_one))
                 }
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -69,7 +71,7 @@ fun RoutinesScreen() {
                                 ) {
                                     Text(routine.routineName, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                     IconButton(onClick = { viewModel.deleteRoutine(routine.id) }) {
-                                        Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                                        Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
                                     }
                                 }
                                 
@@ -110,7 +112,7 @@ fun CreateRoutineDialog(onDismiss: () -> Unit, onSave: (String, List<String>) ->
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(if (step == 1) "Name Your Routine" else "Select Exercises")
+            Text(stringResource(if (step == 1) R.string.name_your_routine else R.string.select_exercises))
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -118,7 +120,7 @@ fun CreateRoutineDialog(onDismiss: () -> Unit, onSave: (String, List<String>) ->
                     OutlinedTextField(
                         value = routineName,
                         onValueChange = { routineName = it },
-                        label = { Text("Routine Name (e.g., Push Day)") },
+                        label = { Text(stringResource(R.string.routine_name_e_g_push_day)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -126,7 +128,7 @@ fun CreateRoutineDialog(onDismiss: () -> Unit, onSave: (String, List<String>) ->
                     OutlinedTextField(
                         value = exerciseSearchQuery,
                         onValueChange = { exerciseSearchQuery = it },
-                        label = { Text("Search Exercise") },
+                        label = { Text(stringResource(R.string.search_exercise)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -152,8 +154,8 @@ fun CreateRoutineDialog(onDismiss: () -> Unit, onSave: (String, List<String>) ->
                     }
                     
                     Divider()
-                    Text("Selected:", fontWeight = FontWeight.Bold)
-                    if (selectedExercises.isEmpty()) Text("None (Tap above to add)")
+                    Text(stringResource(R.string.routine_selected), fontWeight = FontWeight.Bold)
+                    if (selectedExercises.isEmpty()) Text(stringResource(R.string.none_tap_above_to_add))
                     LazyColumn(modifier = Modifier.heightIn(max = 150.dp)) {
                          items(selectedExercises) { ex ->
                             Row(
@@ -163,7 +165,7 @@ fun CreateRoutineDialog(onDismiss: () -> Unit, onSave: (String, List<String>) ->
                             ) {
                                 Text(ex)
                                 IconButton(onClick = { selectedExercises = selectedExercises.filter { it != ex } }) {
-                                    Icon(Icons.Filled.Delete, contentDescription = "Remove")
+                                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.remove))
                                 }
                             }
                          }
@@ -176,11 +178,11 @@ fun CreateRoutineDialog(onDismiss: () -> Unit, onSave: (String, List<String>) ->
                 if (step == 1 && routineName.isNotBlank()) step = 2
                 else if (step == 2 && selectedExercises.isNotEmpty()) onSave(routineName, selectedExercises)
             }) {
-                Text(if (step == 1) "Next" else "Save Routine")
+                Text(stringResource(if (step == 1) R.string.next else R.string.save_routine))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     )
 }

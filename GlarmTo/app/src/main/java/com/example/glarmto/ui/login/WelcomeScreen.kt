@@ -1,5 +1,9 @@
 package com.example.glarmto.ui.login
 
+import com.example.glarmto.ui.util.LanguageToggleButton
+import com.example.glarmto.GlarmToApplication
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -20,12 +24,17 @@ fun WelcomeScreen(
     onNavigateToLogin: () -> Unit,
     onNavigateToRegister: () -> Unit
 ) {
+    val application = LocalContext.current.applicationContext as GlarmToApplication
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
         contentAlignment = Alignment.Center
     ) {
+        LanguageToggleButton(
+            application.languageManager,
+            modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp)
+        )
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -35,7 +44,7 @@ fun WelcomeScreen(
         ) {
             // App Title
             Text(
-                text = "GLARMTO",
+                text = stringResource(R.string.glarmto),
                 fontSize = 52.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary,
@@ -44,7 +53,7 @@ fun WelcomeScreen(
             )
             
             Text(
-                text = "BECOME UNSTOPPABLE.",
+                text = stringResource(R.string.become_unstoppable),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
@@ -61,7 +70,7 @@ fun WelcomeScreen(
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("LOG IN", fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text(stringResource(R.string.log_in), fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -75,7 +84,7 @@ fun WelcomeScreen(
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
             ) {
-                Text("CREATE ACCOUNT", fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                Text(stringResource(R.string.create_account), fontSize = 18.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
             }
         }
     }

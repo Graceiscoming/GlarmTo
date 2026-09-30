@@ -1,6 +1,9 @@
 package com.example.glarmto.ui.widget
 
+import android.app.Application
 import android.content.Context
+import com.example.glarmto.R
+import com.example.glarmto.data.util.ResourceTexts
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -23,13 +26,17 @@ import androidx.glance.unit.ColorProvider
 
 class GlarmToWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
+        // Looked up here (not in the composable) so it follows the language picked in the app.
+        val texts = ResourceTexts(context.applicationContext as Application)
+        val title = texts.get(R.string.widget_title)
+        val subtitle = texts.get(R.string.widget_subtitle)
         provideContent {
-            WidgetContent()
+            WidgetContent(title, subtitle)
         }
     }
 
     @Composable
-    private fun WidgetContent() {
+    private fun WidgetContent(title: String, subtitle: String) {
         Column(
             modifier = GlanceModifier
                 .fillMaxSize()
@@ -39,7 +46,7 @@ class GlarmToWidget : GlanceAppWidget() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "GlarmTo \uD83D\uDCAA",
+                text = title,
                 style = TextStyle(
                     color = ColorProvider(Color(0xFFE53935)),
                     fontWeight = FontWeight.Bold,
@@ -48,7 +55,7 @@ class GlarmToWidget : GlanceAppWidget() {
             )
             Spacer(modifier = GlanceModifier.height(8.dp))
             Text(
-                text = "Ready to crush it today?",
+                text = subtitle,
                 style = TextStyle(
                     color = ColorProvider(Color.White),
                     fontSize = 14.sp

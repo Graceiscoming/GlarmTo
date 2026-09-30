@@ -1,5 +1,6 @@
 package com.example.glarmto
 
+import com.example.glarmto.testsupport.TestTexts
 import android.app.Application
 import com.example.glarmto.testsupport.MainDispatcherRule
 import androidx.test.core.app.ApplicationProvider
@@ -40,7 +41,7 @@ class WorkoutViewModelRobolectricTest {
 
     @Test
     fun `startWorkout creates session and enables stopwatch`() = runBlocking {
-        val vm = WorkoutViewModel(repository)
+        val vm = WorkoutViewModel(repository, TestTexts.english)
         delay(30)
         vm.startWorkout()
         delay(200)
@@ -52,7 +53,7 @@ class WorkoutViewModelRobolectricTest {
 
     @Test
     fun `addWorkout links current session id`() = runBlocking {
-        val vm = WorkoutViewModel(repository)
+        val vm = WorkoutViewModel(repository, TestTexts.english)
         delay(30)
         vm.startWorkout()
         delay(150)

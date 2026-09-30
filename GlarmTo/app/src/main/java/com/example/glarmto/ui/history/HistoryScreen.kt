@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.history
 
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -63,10 +65,10 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                         viewModel.setSelectedDate(it)
                     }
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -76,15 +78,15 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (isMonthly) "Monthly Log History" else "Daily Log History") },
+                title = { Text(stringResource(if (isMonthly) R.string.monthly_log_history else R.string.daily_log_history)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = "Select Date")
+                        Icon(Icons.Default.CalendarMonth, contentDescription = stringResource(R.string.select_date))
                     }
                 }
             )
@@ -103,7 +105,7 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
 
             if (workouts.isEmpty() && nutrition.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No logs for this date", style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(stringResource(R.string.no_logs_for_this_date), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             } else {
                 LazyColumn(
@@ -112,7 +114,7 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                 ) {
                     if (workouts.isNotEmpty()) {
                         item {
-                            Text("Workouts", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                            Text(stringResource(R.string.workouts), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                             Spacer(Modifier.height(8.dp))
                         }
                         
@@ -154,10 +156,10 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                                             verticalAlignment = Alignment.CenterVertically
                                         ) {
                                             Column(modifier = Modifier.weight(1f)) {
-                                                Text(session.sessionName.ifBlank { "Session ${session.sessionId}" }, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                                Text(session.sessionName.ifBlank { stringResource(R.string.f_session, session.sessionId) }, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                                                 val mm = session.durationSeconds / 60
                                                 val ss = session.durationSeconds % 60
-                                                Text("${sessionWorkouts.size} sets • Duration: $mm min $ss sec", color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
+                                                Text(stringResource(R.string.f_sets_duration_min_sec, sessionWorkouts.size, mm, ss), color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
                                             }
                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                 if (session.exhaustionLevel > 0) {
@@ -167,7 +169,7 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                                                 }
                                                 Icon(
                                                     imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                                    contentDescription = "Expand"
+                                                    contentDescription = stringResource(R.string.expand)
                                                 )
                                             }
                                         }
@@ -175,18 +177,18 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                                         AnimatedVisibility(visible = expanded) {
                                             Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                                 if (session.notes.isNotBlank()) {
-                                                    Text("Notes:", fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+                                                    Text(stringResource(R.string.notes), fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
                                                     Text(session.notes, fontSize = 14.sp, fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)
                                                     Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.1f))
                                                 }
 
                                                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                                     Column {
-                                                        Text("Exhaustion", fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
+                                                        Text(stringResource(R.string.exhaustion), fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
                                                         Row { (1..5).forEach { i -> Icon(Icons.Filled.Star, null, modifier = Modifier.size(12.dp), tint = if (i <= session.exhaustionLevel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline) } }
                                                     }
                                                     Column {
-                                                        Text("Satisfaction", fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
+                                                        Text(stringResource(R.string.satisfaction), fontSize = 12.sp, color = MaterialTheme.colorScheme.outline)
                                                         Row { (1..5).forEach { i -> Icon(Icons.Filled.Star, null, modifier = Modifier.size(12.dp), tint = if (i <= session.satisfactionLevel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline) } }
                                                     }
                                                 }
@@ -197,10 +199,10 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                                                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                                         Column {
                                                             Text(workout.exerciseName, fontWeight = FontWeight.SemiBold)
-                                                            Text("${workout.weight} kg x ${workout.reps} reps", fontSize = 14.sp)
+                                                            Text(stringResource(R.string.f_kg_x_reps, workout.weight, workout.reps), fontSize = 14.sp)
                                                         }
                                                         IconButton(onClick = { viewModel.deleteWorkout(workout.id) }) {
-                                                            Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                                                            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                                                         }
                                                     }
                                                     if (workout != sessionWorkouts.last()) Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
@@ -236,7 +238,7 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                                     item {
                                         if (isMonthly) {
                                             val dailyStr = SimpleDateFormat("EEEE, dd MMMM", Locale.getDefault()).format(Date(dateMs))
-                                            Text("$dailyStr - Uncategorized", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
+                                            Text(stringResource(R.string.f_uncategorized, dailyStr), fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.padding(top = 8.dp, bottom = 4.dp))
                                         }
                                         var expanded by remember { mutableStateOf(false) }
                                         Card(
@@ -250,12 +252,12 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                                                     verticalAlignment = Alignment.CenterVertically
                                                 ) {
                                                     Column {
-                                                        Text("Uncategorized Sets", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                                                        Text("${dailyUnmatched.size} sets", color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
+                                                        Text(stringResource(R.string.uncategorized_sets), fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                                                        Text(stringResource(R.string.f_sets, dailyUnmatched.size), color = MaterialTheme.colorScheme.primary, fontSize = 14.sp)
                                                     }
                                                     Icon(
                                                         imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
-                                                        contentDescription = "Expand"
+                                                        contentDescription = stringResource(R.string.expand)
                                                     )
                                                 }
                                                 AnimatedVisibility(visible = expanded) {
@@ -264,10 +266,10 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                                                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                                                                 Column {
                                                                     Text(workout.exerciseName, fontWeight = FontWeight.SemiBold)
-                                                                    Text("${workout.weight} kg x ${workout.reps} reps", fontSize = 14.sp)
+                                                                    Text(stringResource(R.string.f_kg_x_reps, workout.weight, workout.reps), fontSize = 14.sp)
                                                                 }
                                                                 IconButton(onClick = { viewModel.deleteWorkout(workout.id) }) {
-                                                                    Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                                                                    Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                                                                 }
                                                             }
                                                             if (workout != dailyUnmatched.last()) Divider(color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
@@ -286,7 +288,7 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                     if (nutrition.isNotEmpty()) {
                         item {
                             Spacer(Modifier.height(16.dp))
-                            Text("Nutrition", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                            Text(stringResource(R.string.nutrition), fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                             Spacer(Modifier.height(8.dp))
                         }
                         
@@ -319,7 +321,7 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
                                     Row(modifier = Modifier.padding(16.dp)) {
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(item.foodName, fontWeight = FontWeight.Bold)
-                                            Text("${item.calories} kcal")
+                                            Text(stringResource(R.string.f_kcal, item.calories))
                                         }
                                     }
                                 }

@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.camera
 
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import android.Manifest
 import android.util.Log
 import android.view.ViewGroup
@@ -69,13 +71,13 @@ fun CameraScannerScreen(
     if (notFoundBarcode != null) {
         AlertDialog(
             onDismissRequest = dismissNotFound,
-            title = { Text("Product Not Found", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
-            text = { Text("ไม่พบข้อมูลสินค้าจากบาร์โค้ดนี้ในระบบ คุณต้องการสแกนบาร์โค้ดอื่นต่อ หรือ กลับไปพิมพ์ข้อมูลเอง?") },
+            title = { Text(stringResource(R.string.product_not_found), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
+            text = { Text(stringResource(R.string.no_product_was_found_for_this_barcode_scan)) },
             confirmButton = {
-                Button(onClick = { onCancel() }) { Text("พิมพ์ข้อมูลเอง") }
+                Button(onClick = { onCancel() }) { Text(stringResource(R.string.enter_manually)) }
             },
             dismissButton = {
-                TextButton(onClick = dismissNotFound) { Text("สแกนชิ้นอื่นต่อ") }
+                TextButton(onClick = dismissNotFound) { Text(stringResource(R.string.scan_another)) }
             }
         )
     }
@@ -203,7 +205,7 @@ fun CameraScannerScreen(
                     horizontalArrangement = Arrangement.Start
                 ) {
                     IconButton(onClick = onCancel, colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha=0.5f))) {
-                        Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close), tint = Color.White)
                     }
                 }
                 
@@ -212,7 +214,7 @@ fun CameraScannerScreen(
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Text(
-                        text = if (mode == ScannerMode.BARCODE) "Point at Food Barcode" else "Point at Nutrition Label",
+                        text = stringResource(if (mode == ScannerMode.BARCODE) R.string.point_at_food_barcode else R.string.point_at_nutrition_label),
                         modifier = Modifier.padding(16.dp),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
@@ -232,10 +234,10 @@ fun CameraScannerScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text("Camera permission is required to scan.")
+            Text(stringResource(R.string.camera_permission_is_required_to_scan))
             Spacer(modifier = Modifier.height(8.dp))
             Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
-                Text("Grant Permission")
+                Text(stringResource(R.string.grant_permission))
             }
         }
     }

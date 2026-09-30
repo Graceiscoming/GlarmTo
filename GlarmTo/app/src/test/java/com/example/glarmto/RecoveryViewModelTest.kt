@@ -1,5 +1,6 @@
 package com.example.glarmto
 
+import com.example.glarmto.testsupport.TestTexts
 import android.app.Application
 import com.example.glarmto.data.local.entity.UserEntity
 import com.example.glarmto.data.local.entity.WorkoutEntity
@@ -36,7 +37,7 @@ class RecoveryViewModelTest {
     private lateinit var dao: RecordingFakeGlarmToDao
     private lateinit var repository: GlarmToRepository
     private val hour = 60L * 60 * 1000
-    private val placeholder = "Analyzing your history..."
+    private val placeholder = "Analyzing your history…"
 
     @Before
     fun setup() {
@@ -70,7 +71,7 @@ class RecoveryViewModelTest {
 
     @Test
     fun `no training means every muscle group is fully recovered`() {
-        val (status, text) = RecoveryViewModel(repository).settled()
+        val (status, text) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         assertEquals(MuscleGroup.values().toList(), status.map { it.muscleGroup })
         status.forEach { assertEquals(1f, it.recoveryPercentage, 0.0001f) }
@@ -81,7 +82,7 @@ class RecoveryViewModelTest {
     fun `a few recent sets lower only the trained muscle`() {
         sets("Bench Press", 2)
 
-        val (status, _) = RecoveryViewModel(repository).settled()
+        val (status, _) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         assertEquals(0.7f, status.of(MuscleGroup.Chest), 0.01f)
         assertEquals(1f, status.of(MuscleGroup.Legs), 0.0001f)
@@ -92,7 +93,7 @@ class RecoveryViewModelTest {
     fun `an exhausted muscle is named and a recovered one is suggested`() {
         sets("Bench Press", 5) // 75% damage -> about 25% recovered
 
-        val (status, text) = RecoveryViewModel(repository).settled()
+        val (status, text) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         assertTrue(status.of(MuscleGroup.Chest) < 0.5f)
         assertTrue("text was: $text", text.contains("Chest are exhausted"))
@@ -104,7 +105,7 @@ class RecoveryViewModelTest {
     fun `when every muscle is worn out it recommends a rest day`() {
         listOf("Bench Press", "Deadlift", "Squat", "Overhead Press", "Bicep Curl", "Plank").forEach { sets(it, 7) }
 
-        val (status, text) = RecoveryViewModel(repository).settled()
+        val (status, text) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         status.forEach { assertTrue("${it.muscleGroup} at ${it.recoveryPercentage}", it.recoveryPercentage < 0.5f) }
         assertTrue("text was: $text", text.contains("rest day"))
@@ -114,7 +115,7 @@ class RecoveryViewModelTest {
     fun `sets older than 48 hours have fully healed even inside the 72 hour window`() {
         sets("Bench Press", 6, hoursAgo = 60)
 
-        val (status, text) = RecoveryViewModel(repository).settled()
+        val (status, text) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         assertEquals(1f, status.of(MuscleGroup.Chest), 0.0001f)
         assertTrue(text.contains("fully recovered"))
@@ -124,7 +125,7 @@ class RecoveryViewModelTest {
     fun `sets older than 72 hours are not even fetched`() {
         sets("Bench Press", 6, hoursAgo = 100)
 
-        val (status, _) = RecoveryViewModel(repository).settled()
+        val (status, _) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         assertEquals(1f, status.of(MuscleGroup.Chest), 0.0001f)
     }
@@ -134,7 +135,7 @@ class RecoveryViewModelTest {
         sets("Bench Press", 5, hoursAgo = 60)
         sets("Bench Press", 1, hoursAgo = 1)
 
-        val (status, _) = RecoveryViewModel(repository).settled()
+        val (status, _) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         // Only the one recent set counts: about 0.15 damage, 1 hour recovered.
         assertEquals(1f - (0.15f - 1f / 48f), status.of(MuscleGroup.Chest), 0.01f)
@@ -142,7 +143,7 @@ class RecoveryViewModelTest {
 
     @Test
     fun `fetching again picks up sets logged since`() {
-        val vm = RecoveryViewModel(repository)
+        val vm = RecoveryViewModel(repository, TestTexts.english)
         val (before, _) = vm.settled()
         assertEquals(1f, before.of(MuscleGroup.Chest), 0.0001f)
 
@@ -157,7 +158,7 @@ class RecoveryViewModelTest {
     fun `unknown exercises do not affect any muscle`() {
         sets("Zumba", 10)
 
-        val (status, _) = RecoveryViewModel(repository).settled()
+        val (status, _) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         status.forEach { assertEquals(1f, it.recoveryPercentage, 0.0001f) }
     }
@@ -166,7 +167,7 @@ class RecoveryViewModelTest {
     fun `exercise names are matched ignoring case`() {
         sets("bench press", 3)
 
-        val (status, _) = RecoveryViewModel(repository).settled()
+        val (status, _) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         assertTrue(status.of(MuscleGroup.Chest) < 1f)
     }
@@ -178,7 +179,7 @@ class RecoveryViewModelTest {
                 dateInMillis = System.currentTimeMillis(), username = "someone-else")
         )
 
-        val (status, _) = RecoveryViewModel(repository).settled()
+        val (status, _) = RecoveryViewModel(repository, TestTexts.english).settled()
 
         assertEquals(1f, status.of(MuscleGroup.Chest), 0.0001f)
     }

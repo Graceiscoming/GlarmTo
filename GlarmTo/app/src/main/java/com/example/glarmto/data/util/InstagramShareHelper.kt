@@ -28,6 +28,10 @@ object InstagramShareHelper {
         username: String,
         level: Int,
         streak: Int,
+        brandText: String,
+        levelText: String,
+        streakText: String,
+        chooserTitle: String,
         showProfile: Boolean = true,
         showTime: Boolean = false,
         timeText: String = "",
@@ -50,7 +54,7 @@ object InstagramShareHelper {
             }
             
             var currentY = 500f
-            canvas.drawText("GLARMTO 💪", 540f, currentY, paint)
+            canvas.drawText(brandText, 540f, currentY, paint)
             
             if (showProfile) {
                 currentY += 200f
@@ -61,9 +65,9 @@ object InstagramShareHelper {
                 paint.color = Color.LTGRAY
                 paint.textSize = 60f
                 currentY += 120f
-                canvas.drawText("LVL: $level", 540f, currentY, paint)
+                canvas.drawText(levelText, 540f, currentY, paint)
                 currentY += 100f
-                canvas.drawText("Streak: $streak days🔥", 540f, currentY, paint)
+                canvas.drawText(streakText, 540f, currentY, paint)
             }
             
             paint.color = Color.WHITE
@@ -106,7 +110,7 @@ object InstagramShareHelper {
                 }
                 
                 withContext(Dispatchers.Main) {
-                    val chooser = Intent.createChooser(intent, "Share to Story")
+                    val chooser = Intent.createChooser(intent, chooserTitle)
                     chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     context.startActivity(chooser)
                 }

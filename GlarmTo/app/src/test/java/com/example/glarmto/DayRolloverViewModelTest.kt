@@ -1,5 +1,6 @@
 package com.example.glarmto
 
+import com.example.glarmto.testsupport.TestTexts
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.example.glarmto.data.local.entity.NutritionEntity
@@ -169,7 +170,7 @@ class DayRolloverViewModelTest {
     fun `workout screen moves to the new day when it was on today`() = runTest(UnconfinedTestDispatcher()) {
         dao.insertedWorkouts.add(workout("MondaySet", monday).copy(id = 1))
         dao.insertedWorkouts.add(workout("TuesdaySet", tuesday).copy(id = 2))
-        val vm = WorkoutViewModel(repository) { now }
+        val vm = WorkoutViewModel(repository, TestTexts.english) { now }
         val job = launch { vm.workouts.collect { } }
         assertEquals(monday, vm.selectedDate.value)
         assertEquals(listOf("MondaySet"), vm.workouts.value.map { it.exerciseName })
@@ -184,7 +185,7 @@ class DayRolloverViewModelTest {
 
     @Test
     fun `workout screen keeps a day the user picked`() = runTest(UnconfinedTestDispatcher()) {
-        val vm = WorkoutViewModel(repository) { now }
+        val vm = WorkoutViewModel(repository, TestTexts.english) { now }
         vm.setSelectedDateFromLocalInstant(lastWeek + noon)
 
         now = tuesday
@@ -195,7 +196,7 @@ class DayRolloverViewModelTest {
 
     @Test
     fun `sets added after midnight are saved to the new day`() = runTest(UnconfinedTestDispatcher()) {
-        val vm = WorkoutViewModel(repository) { now }
+        val vm = WorkoutViewModel(repository, TestTexts.english) { now }
         now = tuesday
         vm.refreshToday()
 
@@ -209,7 +210,7 @@ class DayRolloverViewModelTest {
     fun `workout today nutrition follows the day`() = runTest(UnconfinedTestDispatcher()) {
         dao.insertedNutrition.add(meal("Monday rice", monday).copy(id = 1))
         dao.insertedNutrition.add(meal("Tuesday egg", tuesday).copy(id = 2))
-        val vm = WorkoutViewModel(repository) { now }
+        val vm = WorkoutViewModel(repository, TestTexts.english) { now }
         val job = launch { vm.todayNutrition.collect { } }
         assertEquals(listOf("Monday rice"), vm.todayNutrition.value.map { it.foodName })
 

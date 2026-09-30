@@ -4,6 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.example.glarmto.ui.util.LanguageProvider
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -71,6 +74,7 @@ class MainActivity : ComponentActivity() {
             val application = applicationContext as GlarmToApplication
             val currentTheme by application.themeManager.currentTheme.collectAsState()
 
+            LanguageProvider(application.languageManager) {
             GlarmToTheme(themeName = currentTheme) {
                 val startDest = if (application.repository.getCurrentUser() != null) {
                     if (application.repository.isProfileSetup()) {
@@ -89,6 +93,7 @@ class MainActivity : ComponentActivity() {
                     MainScreen(startDest)
                 }
             }
+            }
         }
     }
 
@@ -100,12 +105,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-sealed class Screen(val route: String, val title: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
-    object Dashboard : Screen("dashboard", "Home", Icons.Filled.Home)
-    object Routines : Screen("routines", "Routines", Icons.Filled.ListAlt)
-    object Workout : Screen("workout", "Workout", Icons.Filled.FitnessCenter)
-    object Nutrition : Screen("nutrition", "Nutrition", Icons.Filled.Fastfood)
-    object Calculator : Screen("calculator", "Profile", Icons.Filled.Person)
+sealed class Screen(val route: String, @StringRes val titleRes: Int, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
+    object Dashboard : Screen("dashboard", R.string.nav_home, Icons.Filled.Home)
+    object Routines : Screen("routines", R.string.nav_routines, Icons.Filled.ListAlt)
+    object Workout : Screen("workout", R.string.nav_workout, Icons.Filled.FitnessCenter)
+    object Nutrition : Screen("nutrition", R.string.nav_nutrition, Icons.Filled.Fastfood)
+    object Calculator : Screen("calculator", R.string.nav_profile, Icons.Filled.Person)
 }
 
 /**
@@ -141,8 +146,8 @@ fun MainScreen(startDestination: String) {
                 NavigationBar {
                     items.forEach { screen ->
                     NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title) },
+                        icon = { Icon(screen.icon, contentDescription = stringResource(screen.titleRes)) },
+                        label = { Text(stringResource(screen.titleRes)) },
                         selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                         onClick = {
                             navController.navigate(screen.route) {

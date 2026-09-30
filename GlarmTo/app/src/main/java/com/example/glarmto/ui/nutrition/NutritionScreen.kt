@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.nutrition
 
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -91,10 +93,10 @@ fun NutritionScreen() {
     if (showNoInternetDialog) {
         AlertDialog(
             onDismissRequest = { showNoInternetDialog = false },
-            title = { Text("No Internet Connection", fontWeight = FontWeight.Bold) },
-            text = { Text("กรุณาเชื่อมต่อ internet เพื่อใช้งานฟังก์ชันนี้ (Please connect to the internet to use this feature.)") },
+            title = { Text(stringResource(R.string.no_internet_connection), fontWeight = FontWeight.Bold) },
+            text = { Text(stringResource(R.string.please_connect_to_the_internet_to_use_this)) },
             confirmButton = {
-                TextButton(onClick = { showNoInternetDialog = false }) { Text("OK") }
+                TextButton(onClick = { showNoInternetDialog = false }) { Text(stringResource(R.string.ok)) }
             }
         )
     }
@@ -119,10 +121,10 @@ fun NutritionScreen() {
                         viewModel.setSelectedDateFromMaterialPicker(it)
                     }
                     showDatePicker = false
-                }) { Text("OK") }
+                }) { Text(stringResource(R.string.ok)) }
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showDatePicker = false }) { Text(stringResource(R.string.cancel)) }
             }
         ) {
             DatePicker(state = datePickerState)
@@ -144,10 +146,10 @@ fun NutritionScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             val dateStr = SimpleDateFormat("EEE, dd MMM", Locale.getDefault()).format(Date(selectedDate))
-            Text("Nutrition on $dateStr", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.f_nutrition_on, dateStr), fontSize = 20.sp, fontWeight = FontWeight.Bold)
             
             IconButton(onClick = { showDatePicker = true }) {
-                Icon(Icons.Filled.CalendarMonth, contentDescription = "Change Date", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Filled.CalendarMonth, contentDescription = stringResource(R.string.change_date), tint = MaterialTheme.colorScheme.primary)
             }
         }
         
@@ -173,25 +175,25 @@ fun NutritionScreen() {
                         }
                         isEditingGoal = false
                     }) {
-                        Text("Save")
+                        Text(stringResource(R.string.save))
                     }
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("Goal: $dailyGoal kcal", fontWeight = FontWeight.Medium)
+                    Text(stringResource(R.string.f_goal_kcal, dailyGoal), fontWeight = FontWeight.Medium)
                     if (isNutritionDateValid) {
                         IconButton(onClick = {
                             tempGoal = dailyGoal.toString()
                             isEditingGoal = true
                         }) {
-                            Icon(Icons.Filled.Edit, contentDescription = "Edit Goal", modifier = Modifier.size(20.dp))
+                            Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_goal), modifier = Modifier.size(20.dp))
                         }
                     }
                 }
             }
             if (isNutritionDateValid) {
                 TextButton(onClick = { viewModel.copyMealsFromYesterday() }) {
-                    Text("Copy yesterday", maxLines = 1)
+                    Text(stringResource(R.string.copy_yesterday), maxLines = 1)
                 }
             }
         }
@@ -202,7 +204,7 @@ fun NutritionScreen() {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Consumed: $totalConsumed kcal  |  Remaining: $remaining kcal", fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.f_consumed_kcal_remaining_kcal, totalConsumed, remaining), fontWeight = FontWeight.SemiBold)
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
@@ -211,7 +213,7 @@ fun NutritionScreen() {
                 )
                 user?.let { u ->
                     Text(
-                        "Macro split: ${u.macroProteinPct}% P / ${u.macroCarbPct}% C / ${u.macroFatPct}% F → ~${pG}g / ${cG}g / ${fG}g (edit in Profile)",
+                        stringResource(R.string.f_macro_split_p_c_f_g_g_g_edit_in_profile, u.macroProteinPct, u.macroCarbPct, u.macroFatPct, pG, cG, fG),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -224,7 +226,7 @@ fun NutritionScreen() {
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
         ) {
             Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Water (this day)", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.water_this_day), fontWeight = FontWeight.Bold)
                 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -238,13 +240,13 @@ fun NutritionScreen() {
                     Spacer(modifier = Modifier.width(16.dp))
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("${totalWater}", fontWeight = FontWeight.ExtraBold, fontSize = 28.sp, color = MaterialTheme.colorScheme.primary)
-                        Text("/ $waterGoal ml", fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.f_ml_2, waterGoal), fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
                 if (isNutritionDateValid) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(onClick = { viewModel.addWater(250) }) { Text("+250 ml") }
-                        Button(onClick = { viewModel.addWater(500) }) { Text("+500 ml") }
+                        Button(onClick = { viewModel.addWater(250) }) { Text(stringResource(R.string.n_250_ml)) }
+                        Button(onClick = { viewModel.addWater(500) }) { Text(stringResource(R.string.n_500_ml)) }
                     }
                 }
                 waterEntries.forEach { w ->
@@ -253,10 +255,10 @@ fun NutritionScreen() {
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("${w.amountMl} ml", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.f_ml_3, w.amountMl), style = MaterialTheme.typography.bodyMedium)
                         if (isNutritionDateValid) {
                             IconButton(onClick = { viewModel.deleteWater(w.id) }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Remove", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.remove), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     }
@@ -277,7 +279,7 @@ fun NutritionScreen() {
                     OutlinedTextField(
                         value = foodName,
                         onValueChange = { foodName = it },
-                        label = { Text("Food Name (Optional)") },
+                        label = { Text(stringResource(R.string.food_name_optional)) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -286,7 +288,7 @@ fun NutritionScreen() {
                         OutlinedTextField(
                             value = calories,
                             onValueChange = { calories = it },
-                            label = { Text("Calories (kcal)") },
+                            label = { Text(stringResource(R.string.calories_kcal)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f),
                             singleLine = true
@@ -295,7 +297,7 @@ fun NutritionScreen() {
                             onClick = {
                                 val cal = calories.trim().toIntOrNull()
                                 if (cal != null && cal > 0) {
-                                    val name = if (foodName.isNotBlank()) foodName.trim() else "Quick Add"
+                                    val name = if (foodName.isNotBlank()) foodName.trim() else context.getString(R.string.quick_add)
                                     viewModel.addNutrition(foodName = name, calories = cal)
                                     foodName = ""
                                     calories = ""
@@ -307,7 +309,7 @@ fun NutritionScreen() {
                                 .align(Alignment.CenterVertically),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                         ) {
-                            Text("Add")
+                            Text(stringResource(R.string.add))
                         }
                     }
                     
@@ -322,13 +324,13 @@ fun NutritionScreen() {
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Scan Barcode")
+                            Text(stringResource(R.string.scan_barcode))
                         }
                         OutlinedButton(
                             onClick = { activeScannerMode = ScannerMode.OCR },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Text("Scan Label")
+                            Text(stringResource(R.string.scan_label))
                         }
                     }
                 }
@@ -339,7 +341,7 @@ fun NutritionScreen() {
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
             ) {
                 Text(
-                    "Editing past data is disabled. You can only plan your meals for today or up to 7 days in the future.",
+                    stringResource(R.string.editing_past_data_is_disabled_you_can_only),
                     color = MaterialTheme.colorScheme.onErrorContainer,
                     modifier = Modifier.padding(16.dp),
                     fontSize = 14.sp
@@ -366,11 +368,11 @@ fun NutritionScreen() {
                     ) {
                         Column {
                             Text(item.foodName, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            Text("${item.calories} kcal", color = MaterialTheme.colorScheme.primary)
+                            Text(stringResource(R.string.f_kcal, item.calories), color = MaterialTheme.colorScheme.primary)
                         }
                         if (isNutritionDateValid) {
                             IconButton(onClick = { viewModel.deleteNutrition(item.id) }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.delete), tint = MaterialTheme.colorScheme.error)
                             }
                         }
                     }

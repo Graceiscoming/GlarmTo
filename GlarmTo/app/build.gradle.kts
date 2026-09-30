@@ -37,6 +37,13 @@ android {
     buildFeatures {
         compose = true
     }
+    bundle {
+        // The app lets users pick Thai or English regardless of the phone's language, so every
+        // language must ship in every install (Play would otherwise drop the one the phone isn't set to).
+        language {
+            enableSplit = false
+        }
+    }
     testOptions {
         unitTests.isIncludeAndroidResources = true
     }
@@ -87,6 +94,9 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.9.0")
     testImplementation("androidx.test:core:1.6.1")
     testImplementation("org.robolectric:robolectric:4.14.1")
+    // Compose UI tests that run on the JVM with Robolectric (e.g. the language switch)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

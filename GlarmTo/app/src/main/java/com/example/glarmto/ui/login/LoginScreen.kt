@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.login
 
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -56,7 +58,7 @@ fun LoginScreen(onBack: () -> Unit, onLoginSuccess: () -> Unit) {
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "WELCOME\nBACK",
+                text = stringResource(R.string.welcome_back),
                 fontSize = 36.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary,
@@ -65,7 +67,7 @@ fun LoginScreen(onBack: () -> Unit, onLoginSuccess: () -> Unit) {
             )
             
             Text(
-                text = "Log in to continue tracking.",
+                text = stringResource(R.string.log_in_to_continue_tracking),
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 32.dp)
@@ -77,7 +79,7 @@ fun LoginScreen(onBack: () -> Unit, onLoginSuccess: () -> Unit) {
                     username = it
                     errorMessage = null
                 },
-                label = { Text("Username") },
+                label = { Text(stringResource(R.string.username)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 shape = RoundedCornerShape(8.dp)
@@ -91,7 +93,7 @@ fun LoginScreen(onBack: () -> Unit, onLoginSuccess: () -> Unit) {
                     password = it
                     errorMessage = null
                 },
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.password)) },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
@@ -120,11 +122,11 @@ fun LoginScreen(onBack: () -> Unit, onLoginSuccess: () -> Unit) {
                             if (success) {
                                 onLoginSuccess()
                             } else {
-                                errorMessage = "Invalid username or password."
+                                errorMessage = context.getString(R.string.err_invalid_credentials)
                             }
                         }
                     } else {
-                        errorMessage = "Please enter username and password."
+                        errorMessage = context.getString(R.string.err_enter_username_password)
                     }
                 },
                 enabled = !isChecking,
@@ -137,7 +139,7 @@ fun LoginScreen(onBack: () -> Unit, onLoginSuccess: () -> Unit) {
                 if (isChecking) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("LOG IN", fontSize = 16.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text(stringResource(R.string.log_in), fontSize = 16.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 }
             }
         }

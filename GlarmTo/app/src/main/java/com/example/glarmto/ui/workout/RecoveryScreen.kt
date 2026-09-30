@@ -1,5 +1,8 @@
 package com.example.glarmto.ui.workout
 
+import com.example.glarmto.data.util.labelRes
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -56,12 +59,12 @@ fun RecoveryBarItem(status: MuscleRecovery) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    status.muscleGroup.name,
+                    stringResource(status.muscleGroup.labelRes()),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp
                 )
                 Text(
-                    "${(animatedProgress * 100).roundToInt()}% Recovered",
+                    stringResource(R.string.f_recovered, (animatedProgress * 100).roundToInt()),
                     fontWeight = FontWeight.ExtraBold,
                     color = barColor
                 )
@@ -86,7 +89,7 @@ fun RecoveryBarItem(status: MuscleRecovery) {
             if (pct < 0.3f) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Icon(Icons.Filled.Warning, contentDescription = null, tint = Color(0xFFF44336), modifier = Modifier.size(14.dp))
-                    Text("Needs more rest before heavy training.", fontSize = 12.sp, color = Color(0xFFF44336))
+                    Text(stringResource(R.string.needs_more_rest_before_heavy_training), fontSize = 12.sp, color = Color(0xFFF44336))
                 }
             }
         }

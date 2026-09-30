@@ -1,5 +1,9 @@
 package com.example.glarmto.ui.calculator
 
+import com.example.glarmto.ui.util.goalLabel
+import com.example.glarmto.data.util.Goals
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -40,7 +44,7 @@ fun CalculatorScreen() {
     )
 
     var selectedTab by remember { mutableStateOf(0) }
-    val tabs = listOf("My Profile", "1RM Calculator", "Plate load")
+    val tabs = listOf(stringResource(R.string.tab_my_profile), stringResource(R.string.n_1rm_calculator), stringResource(R.string.tab_plate_load))
 
     Column(
         modifier = Modifier
@@ -101,9 +105,9 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
             .verticalScroll(scrollState)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Filled.Person, contentDescription = "Profile", tint = MaterialTheme.colorScheme.primary)
+            Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.profile), tint = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(8.dp))
-            Text("User Profile & TDEE", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.user_profile_tdee), fontSize = 24.sp, fontWeight = FontWeight.Bold)
         }
 
         user?.let { u ->
@@ -125,7 +129,7 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                             .background(MaterialTheme.colorScheme.primary, CircleShape)
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text("LVL", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.lvl), color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             Text("${u.level}", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold)
                         }
                     }
@@ -147,7 +151,7 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.MilitaryTech, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(4.dp))
-                        Text("Fitness Journey", fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                        Text(stringResource(R.string.fitness_journey), fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     }
                     Spacer(Modifier.height(8.dp))
                     LinearProgressIndicator(
@@ -156,9 +160,9 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                         strokeCap = StrokeCap.Round
                     )
                     Spacer(Modifier.height(4.dp))
-                    Text("${u.xp - threshold} / $required XP to Level ${u.level + 1}", style = MaterialTheme.typography.labelSmall)
-                    Text("Today's XP: $dailyEarned / 300", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                    Text("${u.xp} Total XP earned", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
+                    Text(stringResource(R.string.f_xp_to_level, u.xp - threshold, required, u.level + 1), style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.f_today_s_xp_300, dailyEarned), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text(stringResource(R.string.f_total_xp_earned, u.xp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f))
                 }
                 }
             }
@@ -168,18 +172,18 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text("Username: ${u.username}", fontWeight = FontWeight.Bold)
-                                Text("Age: ${u.age} years")
-                                Text("Gender: ${if (u.isMale) "Male" else "Female"}")
-                                Text("Weight: ${u.weight} kg")
-                                Text("Height: ${u.height} cm")
-                                Text("Goal: ${u.goal}")
-                                Text("Workout Days: ${u.workoutDays} days/week")
+                                Text(stringResource(R.string.f_username, u.username), fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.f_age_years, u.age))
+                                Text(stringResource(R.string.f_gender, stringResource(if (u.isMale) R.string.male else R.string.female)))
+                                Text(stringResource(R.string.f_weight_kg, u.weight))
+                                Text(stringResource(R.string.f_height_cm, u.height))
+                                Text(stringResource(R.string.f_goal, goalLabel(u.goal)))
+                                Text(stringResource(R.string.f_workout_days_days_week, u.workoutDays))
                                 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(Icons.Filled.Timer, contentDescription = null, modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(Modifier.width(4.dp))
-                                    Text("Default Rest Time: ${u.defaultRestSeconds}s", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(stringResource(R.string.f_default_rest_time_s, u.defaultRestSeconds), color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                             }
 
@@ -187,35 +191,35 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                             val bmi = if (heightM > 0) u.weight / (heightM * heightM) else 0.0
                             val bmiCategory = when {
                                 bmi == 0.0 -> "-"
-                                bmi < 18.5 -> "Underweight (ผอม)"
-                                bmi < 25.0 -> "Normal (ปกติ)"
-                                bmi < 30.0 -> "Overweight (ท้วม)"
-                                else -> "Obese (อ้วน)"
+                                bmi < 18.5 -> stringResource(R.string.bmi_underweight)
+                                bmi < 25.0 -> stringResource(R.string.bmi_normal)
+                                bmi < 30.0 -> stringResource(R.string.bmi_overweight)
+                                else -> stringResource(R.string.bmi_obese)
                             }
 
                             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(start = 8.dp)) {
                                 androidx.compose.foundation.Image(
                                     painter = androidx.compose.ui.res.painterResource(id = if (u.isMale) com.example.glarmto.R.drawable.men else com.example.glarmto.R.drawable.girl),
-                                    contentDescription = "Avatar",
+                                    contentDescription = stringResource(R.string.avatar),
                                     modifier = Modifier.size(150.dp),
                                     colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(androidx.compose.ui.graphics.Color.White)
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(String.format("BMI: %.1f", bmi), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+                                Text(stringResource(R.string.f_bmi, bmi), fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
                                 Text(bmiCategory, style = MaterialTheme.typography.bodyMedium, color = androidx.compose.ui.graphics.Color.White)
                             }
                         }
 
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
-                        Text("Daily Calorie Target: ${u.dailyGoal} kcal", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
+                        Text(stringResource(R.string.f_daily_calorie_target_kcal, u.dailyGoal), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp)
                         val (pg, cg, fg) = HealthCalculator.macroGramsFromCalories(
                             u.dailyGoal, u.macroProteinPct, u.macroCarbPct, u.macroFatPct
                         )
                         Text(
-                            "Macros (~grams): ${pg}g P · ${cg}g C · ${fg}g F  (${u.macroProteinPct}% / ${u.macroCarbPct}% / ${u.macroFatPct}%)",
+                            stringResource(R.string.f_macros_grams_g_p_g_c_g_f, pg, cg, fg, u.macroProteinPct, u.macroCarbPct, u.macroFatPct),
                             style = MaterialTheme.typography.bodyMedium
                         )
-                        Text("Water goal: ${u.dailyWaterGoalMl} ml/day", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(R.string.f_water_goal_ml_day, u.dailyWaterGoalMl), style = MaterialTheme.typography.bodyMedium)
 
                         Button(onClick = { 
                             editAge = u.age.toString()
@@ -231,32 +235,32 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                             editWaterGoal = u.dailyWaterGoalMl.toString()
                             isEditing = true 
                         }, modifier = Modifier.padding(top = 8.dp)) {
-                            Text("Edit Profile")
+                            Text(stringResource(R.string.edit_profile))
                         }
                     }
                 }
             } else {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Text("Edit Profile", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.edit_profile), fontWeight = FontWeight.Bold)
                         
                         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             FilterChip(
                                 selected = editIsMale,
                                 onClick = { editIsMale = true },
-                                label = { Text("Male") }
+                                label = { Text(stringResource(R.string.male)) }
                             )
                             FilterChip(
                                 selected = !editIsMale,
                                 onClick = { editIsMale = false },
-                                label = { Text("Female") }
+                                label = { Text(stringResource(R.string.female)) }
                             )
                         }
 
                         OutlinedTextField(
                             value = editAge,
                             onValueChange = { editAge = it },
-                            label = { Text("Age (years)") },
+                            label = { Text(stringResource(R.string.age_years)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -264,7 +268,7 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                         OutlinedTextField(
                             value = editWeight,
                             onValueChange = { editWeight = it },
-                            label = { Text("Weight (kg)") },
+                            label = { Text(stringResource(R.string.weight_kg)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -272,7 +276,7 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                         OutlinedTextField(
                             value = editHeight,
                             onValueChange = { editHeight = it },
-                            label = { Text("Height (cm)") },
+                            label = { Text(stringResource(R.string.height_cm)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -280,23 +284,23 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                         OutlinedTextField(
                             value = editRestTime,
                             onValueChange = { editRestTime = it },
-                            label = { Text("Default Rest Time (seconds)") },
+                            label = { Text(stringResource(R.string.default_rest_time_seconds)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Text("Primary Goal", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                        Text(stringResource(R.string.primary_goal), fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-                            listOf("Cut", "Maintain", "Bulk").forEach { g ->
+                            Goals.all.forEach { g ->
                                 FilterChip(
                                     selected = editGoal == g,
                                     onClick = { editGoal = g },
-                                    label = { Text(g) }
+                                    label = { Text(goalLabel(g)) }
                                 )
                             }
                         }
 
-                        Text("Workout Days per Week: ${editWorkoutDays.roundToInt()}", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+                        Text(stringResource(R.string.f_workout_days_per_week, editWorkoutDays.roundToInt()), fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
                         Slider(
                             value = editWorkoutDays,
                             onValueChange = { editWorkoutDays = it },
@@ -305,26 +309,26 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                             modifier = Modifier.fillMaxWidth()
                         )
 
-                        Text("Macro split (% of calories)", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.macro_split_of_calories), fontWeight = FontWeight.Bold)
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedTextField(
                                 value = editMacroP,
                                 onValueChange = { editMacroP = it.filter { ch -> ch.isDigit() }.take(3) },
-                                label = { Text("Protein %") },
+                                label = { Text(stringResource(R.string.protein)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.weight(1f)
                             )
                             OutlinedTextField(
                                 value = editMacroC,
                                 onValueChange = { editMacroC = it.filter { ch -> ch.isDigit() }.take(3) },
-                                label = { Text("Carb %") },
+                                label = { Text(stringResource(R.string.carb)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.weight(1f)
                             )
                             OutlinedTextField(
                                 value = editMacroF,
                                 onValueChange = { editMacroF = it.filter { ch -> ch.isDigit() }.take(3) },
-                                label = { Text("Fat %") },
+                                label = { Text(stringResource(R.string.fat)) },
                                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                 modifier = Modifier.weight(1f)
                             )
@@ -332,14 +336,14 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                         OutlinedTextField(
                             value = editWaterGoal,
                             onValueChange = { editWaterGoal = it.filter { ch -> ch.isDigit() }.take(5) },
-                            label = { Text("Daily water goal (ml)") },
+                            label = { Text(stringResource(R.string.daily_water_goal_ml)) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.fillMaxWidth()
                         )
 
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             OutlinedButton(onClick = { isEditing = false }, modifier = Modifier.weight(1f)) {
-                                Text("Cancel")
+                                Text(stringResource(R.string.cancel))
                             }
                             Button(onClick = {
                                 focusManager.clearFocus()
@@ -368,7 +372,7 @@ fun ProfileEditor(viewModel: CalculatorViewModel) {
                                 )
                                 isEditing = false
                             }, modifier = Modifier.weight(1f)) {
-                                Text("Save")
+                                Text(stringResource(R.string.save))
                             }
                         }
                     }
@@ -392,13 +396,13 @@ fun OneRepMaxCalculator() {
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
     ) {
-        Text("1RM Calculator", fontSize = 20.sp, fontWeight = FontWeight.Bold)
-        Text("Estimate your 1-rep max (Epley formula)", style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.n_1rm_calculator), fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.estimate_your_1_rep_max_epley_formula), style = MaterialTheme.typography.bodyMedium)
 
         OutlinedTextField(
             value = weight,
             onValueChange = { weight = it },
-            label = { Text("Weight Lifted (kg)") },
+            label = { Text(stringResource(R.string.weight_lifted_kg)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
@@ -406,7 +410,7 @@ fun OneRepMaxCalculator() {
         OutlinedTextField(
             value = reps,
             onValueChange = { reps = it },
-            label = { Text("Reps Performed") },
+            label = { Text(stringResource(R.string.reps_performed)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
@@ -423,14 +427,14 @@ fun OneRepMaxCalculator() {
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Calculate 1RM")
+            Text(stringResource(R.string.calculate_1rm))
         }
 
         if (oneRmResult > 0) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        "Estimated 1RM: ${((oneRmResult * 10.0).roundToInt() / 10.0)} kg",
+                        stringResource(R.string.f_estimated_1rm_kg, ((oneRmResult * 10.0).roundToInt() / 10.0)),
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         color = MaterialTheme.colorScheme.primary
@@ -443,6 +447,7 @@ fun OneRepMaxCalculator() {
 
 @Composable
 fun PlateLoadCalculator() {
+    val context = LocalContext.current
     var bar by remember { mutableStateOf("20") }
     var target by remember { mutableStateOf("100") }
     var platesStr by remember { mutableStateOf("25,20,15,10,5,2.5,1.25") }
@@ -454,29 +459,29 @@ fun PlateLoadCalculator() {
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = Modifier.fillMaxWidth().verticalScroll(scroll)
     ) {
-        Text("Plate load (per side, symmetric)", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.plate_load_per_side_symmetric), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Text(
-            "Bar weight, target total on the bar, and comma-separated plate sizes (kg) available.",
+            stringResource(R.string.bar_weight_target_total_on_the_bar_and_com),
             style = MaterialTheme.typography.bodyMedium
         )
         OutlinedTextField(
             value = bar,
             onValueChange = { bar = it },
-            label = { Text("Bar weight (kg)") },
+            label = { Text(stringResource(R.string.bar_weight_kg)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = target,
             onValueChange = { target = it },
-            label = { Text("Target total (kg)") },
+            label = { Text(stringResource(R.string.target_total_kg)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
             modifier = Modifier.fillMaxWidth()
         )
         OutlinedTextField(
             value = platesStr,
             onValueChange = { platesStr = it },
-            label = { Text("Plates (kg, comma-separated)") },
+            label = { Text(stringResource(R.string.plates_kg_comma_separated)) },
             modifier = Modifier.fillMaxWidth(),
             minLines = 2
         )
@@ -488,20 +493,20 @@ fun PlateLoadCalculator() {
                 val plates = platesStr.split(',').mapNotNull { s -> s.trim().replace(',', '.').toDoubleOrNull() }
                 val res = PlateCalculator.computeLoad(t, b, plates)
                 message = when {
-                    res == null -> "Invalid input."
+                    res == null -> context.getString(R.string.plate_invalid)
                     !PlateCalculator.isGoodEnough(res) ->
-                        "Per side target ${"%.2f".format(res.weightPerSideKg)} kg — leftover ~${"%.2f".format(res.residualKg)} kg per side (try more plate sizes or adjust target)."
+                        context.getString(R.string.f_plate_leftover, "%.2f".format(res.weightPerSideKg), "%.2f".format(res.residualKg))
                     else -> {
                         val parts = res.platesPerSide.joinToString(" + ") { (w, n) ->
                             if (n == 1) "${w} kg" else "${n}×${w} kg"
                         }
-                        "Per side: ${"%.2f".format(res.weightPerSideKg)} kg → $parts (each side)."
+                        context.getString(R.string.f_plate_result, "%.2f".format(res.weightPerSideKg), parts)
                     }
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Calculate")
+            Text(stringResource(R.string.calculate))
         }
         if (message.isNotBlank()) {
             Card(modifier = Modifier.fillMaxWidth()) {

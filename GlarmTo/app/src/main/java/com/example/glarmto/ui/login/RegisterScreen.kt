@@ -1,5 +1,7 @@
 package com.example.glarmto.ui.login
 
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,7 +43,7 @@ fun RegisterScreen(
                 title = { Text("") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -59,7 +61,7 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "JOIN THE\nBROTHERHOOD",
+                text = stringResource(R.string.join_the_brotherhood),
                 fontSize = 36.sp,
                 fontWeight = FontWeight.ExtraBold,
                 color = MaterialTheme.colorScheme.primary,
@@ -68,7 +70,7 @@ fun RegisterScreen(
             )
             
             Text(
-                text = "Create an account to start tracking your gains.",
+                text = stringResource(R.string.create_an_account_to_start_tracking_your_g),
                 fontSize = 16.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 32.dp)
@@ -80,7 +82,7 @@ fun RegisterScreen(
                     username = it
                     errorMessage = null 
                 },
-                label = { Text("Username") },
+                label = { Text(stringResource(R.string.username)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(8.dp)
@@ -94,7 +96,7 @@ fun RegisterScreen(
                     password = it
                     errorMessage = null 
                 },
-                label = { Text("Password") },
+                label = { Text(stringResource(R.string.password)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
@@ -109,7 +111,7 @@ fun RegisterScreen(
                     confirmPassword = it
                     errorMessage = null 
                 },
-                label = { Text("Confirm Password") },
+                label = { Text(stringResource(R.string.confirm_password)) },
                 singleLine = true,
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth(),
@@ -131,11 +133,11 @@ fun RegisterScreen(
                 onClick = {
                     val formattedUser = username.trim()
                     if (formattedUser.isEmpty() || password.isEmpty()) {
-                        errorMessage = "All fields are required."
+                        errorMessage = context.getString(R.string.err_all_fields_required)
                         return@Button
                     }
                     if (password != confirmPassword) {
-                        errorMessage = "Passwords do not match."
+                        errorMessage = context.getString(R.string.err_passwords_mismatch)
                         return@Button
                     }
                     
@@ -146,7 +148,7 @@ fun RegisterScreen(
                         if (success) {
                             onRegisterSuccess()
                         } else {
-                            errorMessage = "Username already exists."
+                            errorMessage = context.getString(R.string.err_username_taken)
                         }
                     }
                 },
@@ -160,7 +162,7 @@ fun RegisterScreen(
                 if (isRegistering) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                 } else {
-                    Text("REGISTER", fontSize = 16.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                    Text(stringResource(R.string.register), fontSize = 16.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
                 }
             }
         }

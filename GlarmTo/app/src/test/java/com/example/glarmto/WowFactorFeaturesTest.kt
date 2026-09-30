@@ -1,5 +1,6 @@
 package com.example.glarmto
 
+import com.example.glarmto.testsupport.TestTexts
 import android.app.Application
 import androidx.test.core.app.ApplicationProvider
 import com.example.glarmto.data.local.entity.WorkoutEntity
@@ -42,7 +43,7 @@ class WowFactorFeaturesTest {
 
     @Test
     fun `test getLatestWorkoutByName and Smart Suggestion Logic`() = runTest {
-        val viewModel = WorkoutViewModel(repository)
+        val viewModel = WorkoutViewModel(repository, TestTexts.english)
         
         // 1. Insert a workout with RPE 6
         val workout1 = WorkoutEntity(
@@ -186,7 +187,7 @@ class WowFactorFeaturesTest {
 
     @Test
     fun `test PiP Rest Timer logic in WorkoutViewModel`() = runTest {
-        val viewModel = WorkoutViewModel(repository)
+        val viewModel = WorkoutViewModel(repository, TestTexts.english)
 
         // Initial setup
         assertEquals(0, viewModel.restTimeSeconds.value)

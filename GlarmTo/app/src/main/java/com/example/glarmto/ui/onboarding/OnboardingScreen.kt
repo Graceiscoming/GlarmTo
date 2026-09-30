@@ -1,5 +1,9 @@
 package com.example.glarmto.ui.onboarding
 
+import com.example.glarmto.ui.util.goalLabel
+import com.example.glarmto.data.util.Goals
+import com.example.glarmto.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -48,9 +52,9 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-        Text("Welcome, $username! 👋", fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        Text(stringResource(R.string.f_welcome, username), fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Let's set up your profile to calculate your calorie needs.", textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+        Text(stringResource(R.string.let_s_set_up_your_profile_to_calculate_you), textAlign = androidx.compose.ui.text.style.TextAlign.Center)
         
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -58,12 +62,12 @@ fun OnboardingScreen(onComplete: () -> Unit) {
             FilterChip(
                 selected = isMale,
                 onClick = { isMale = true },
-                label = { Text("Male") }
+                label = { Text(stringResource(R.string.male)) }
             )
             FilterChip(
                 selected = !isMale,
                 onClick = { isMale = false },
-                label = { Text("Female") }
+                label = { Text(stringResource(R.string.female)) }
             )
         }
         
@@ -72,7 +76,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
         OutlinedTextField(
             value = age,
             onValueChange = { age = it },
-            label = { Text("Age") },
+            label = { Text(stringResource(R.string.age)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
@@ -82,7 +86,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
         OutlinedTextField(
             value = weight,
             onValueChange = { weight = it },
-            label = { Text("Weight (kg)") },
+            label = { Text(stringResource(R.string.weight_kg)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
@@ -92,27 +96,27 @@ fun OnboardingScreen(onComplete: () -> Unit) {
         OutlinedTextField(
             value = height,
             onValueChange = { height = it },
-            label = { Text("Height (cm)") },
+            label = { Text(stringResource(R.string.height_cm)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
             modifier = Modifier.fillMaxWidth()
         )
         
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text("Primary Goal", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+        Text(stringResource(R.string.primary_goal), fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
-            listOf("Cut", "Maintain", "Bulk").forEach { g ->
+            Goals.all.forEach { g ->
                 FilterChip(
                     selected = goal == g,
                     onClick = { goal = g },
-                    label = { Text(g) }
+                    label = { Text(goalLabel(g)) }
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Workout Days per Week: ${workoutDays.roundToInt()}", fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
+        Text(stringResource(R.string.f_workout_days_per_week, workoutDays.roundToInt()), fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.Start))
         Slider(
             value = workoutDays,
             onValueChange = { workoutDays = it },
@@ -122,7 +126,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
         )
 
         if (showError) {
-            Text("Please enter valid numbers for all fields", color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
+            Text(stringResource(R.string.please_enter_valid_numbers_for_all_fields), color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp))
         }
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -159,7 +163,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
             },
             modifier = Modifier.fillMaxWidth().height(50.dp)
         ) {
-            Text("Save Profile & Continue", fontSize = 16.sp)
+            Text(stringResource(R.string.save_profile_continue), fontSize = 16.sp)
         }
     }
     }

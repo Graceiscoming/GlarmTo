@@ -1,5 +1,8 @@
 package com.example.glarmto.ui.workout
 
+import com.example.glarmto.data.util.labelRes
+import com.example.glarmto.data.util.AppTexts
+import com.example.glarmto.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -17,11 +20,14 @@ data class MuscleRecovery(
     val recoveryPercentage: Float // 0.0 to 1.0 (1.0 = 100% recovered)
 )
 
-class RecoveryViewModel(private val repository: GlarmToRepository) : ViewModel() {
+class RecoveryViewModel(
+    private val repository: GlarmToRepository,
+    private val texts: AppTexts
+) : ViewModel() {
     private val _recoveryStatus = MutableStateFlow<List<MuscleRecovery>>(emptyList())
     val recoveryStatus: StateFlow<List<MuscleRecovery>> = _recoveryStatus
 
-    private val _smartRecommendation = MutableStateFlow<String>("Analyzing your history...")
+    private val _smartRecommendation = MutableStateFlow<String>(texts.get(R.string.recovery_analyzing))
     val smartRecommendation: StateFlow<String> = _smartRecommendation
 
     init {
@@ -52,24 +58,31 @@ class RecoveryViewModel(private val repository: GlarmToRepository) : ViewModel()
 
                 if (exhausted.isNotEmpty()) {
                     val recStr = if (fullyRecovered.isNotEmpty()) {
-                        "Your ${exhausted.joinToString(", ") { it.name }} are exhausted. Focus on ${fullyRecovered.random().name} today!"
+                        texts.get(
+                            R.string.f_recovery_exhausted_focus,
+                            exhausted.joinToString(", ") { texts.get(it.labelRes()) },
+                            texts.get(fullyRecovered.random().labelRes())
+                        )
                     } else {
-                        "You've been working hard! Everything needs a rest. Take a rest day 🧘‍♂️"
+                        texts.get(R.string.recovery_need_rest_day)
                     }
                     _smartRecommendation.value = recStr
                 } else {
-                    _smartRecommendation.value = "You are fully recovered! Go crush any workout today 💪"
+                    _smartRecommendation.value = texts.get(R.string.recovery_fully_recovered)
                 }
             }
         }
     }
 }
 
-class RecoveryViewModelFactory(private val repository: GlarmToRepository) : ViewModelProvider.Factory {
+class RecoveryViewModelFactory(
+    private val repository: GlarmToRepository,
+    private val texts: AppTexts
+) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(RecoveryViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return RecoveryViewModel(repository) as T
+            return RecoveryViewModel(repository, texts) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

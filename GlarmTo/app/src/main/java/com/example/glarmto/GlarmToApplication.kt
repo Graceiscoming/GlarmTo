@@ -12,5 +12,6 @@ class GlarmToApplication : Application() {
     val database by lazy { AppDatabase.getDatabase(this) }
     val sessionManager by lazy { SessionManager(this) }
     val themeManager by lazy { com.example.glarmto.data.preferences.ThemeManager(this) }
+    val languageManager by lazy { com.example.glarmto.data.preferences.LanguageManager(this) }
     val repository by lazy { GlarmToRepository(database.glarmToDao(), sessionManager) }
 }

@@ -29,25 +29,28 @@ object GlarmToExport {
         sb.appendLine("type,id,username,dateInMillis,extras")
         workouts.forEach { w ->
             sb.appendLine(
-                listOf(
+                csvRow(
                     "workout",
                     w.id,
                     w.username,
                     w.dateInMillis,
                     "${w.exerciseName};${w.weight};${w.reps};${w.sessionId ?: ""};${w.rpe ?: ""}"
-                ).joinToString(",") { cell ->
-                    val s = cell.toString()
-                    if (s.contains(',') || s.contains('"')) "\"${s.replace("\"", "\"\"")}\"" else s
-                }
+                )
             )
         }
         nutrition.forEach { n ->
-            sb.appendLine("nutrition,${n.id},${n.username},${n.dateInMillis},${n.foodName};${n.calories}")
+            sb.appendLine(csvRow("nutrition", n.id, n.username, n.dateInMillis, "${n.foodName};${n.calories}"))
         }
         water.forEach { w ->
-            sb.appendLine("water,${w.id},${w.username},${w.dateInMillis},${w.amountMl}")
+            sb.appendLine(csvRow("water", w.id, w.username, w.dateInMillis, w.amountMl))
         }
         return sb.toString()
+    }
+
+    /** One CSV line; every cell is quoted if it contains a comma, quote, or line break. */
+    private fun csvRow(vararg cells: Any): String = cells.joinToString(",") { cell ->
+        val s = cell.toString()
+        if (s.any { it == ',' || it == '"' || it == '\n' || it == '\r' }) "\"${s.replace("\"", "\"\"")}\"" else s
     }
 
     private fun userToJsonString(u: UserEntity): String = jsonObject(

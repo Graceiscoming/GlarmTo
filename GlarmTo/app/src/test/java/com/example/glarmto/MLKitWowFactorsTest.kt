@@ -47,4 +47,40 @@ class MLKitWowFactorsTest {
         assertEquals("Protein should be found", 10, parsed.protein)
         assertEquals("Carbs should default to 0", 0, parsed.carbs)
     }
+
+    @Test
+    fun testNutritionOcrParser_prefersKcalOverKj() {
+        val parsed = NutritionOcrParser.parseNutritionFromLabel("Energy 1200 kJ / 290 kcal\nProtein 10g")
+
+        assertEquals(290, parsed.calories)
+    }
+
+    @Test
+    fun testNutritionOcrParser_convertsKjWhenNoKcalGiven() {
+        val parsed = NutritionOcrParser.parseNutritionFromLabel("Energy 1046 kJ")
+
+        assertEquals(250, parsed.calories)
+    }
+
+    @Test
+    fun testNutritionOcrParser_usesTotalFatNotSaturatedFat() {
+        val parsed = NutritionOcrParser.parseNutritionFromLabel("Saturated fat 2g\nTotal fat 10g")
+
+        assertEquals(10, parsed.fats)
+    }
+
+    @Test
+    fun testNutritionOcrParser_ignoresCaloriesFromFat() {
+        val parsed = NutritionOcrParser.parseNutritionFromLabel("Calories from fat 30\nCalories 250\nFat 12g")
+
+        assertEquals(250, parsed.calories)
+        assertEquals(12, parsed.fats)
+    }
+
+    @Test
+    fun testNutritionOcrParser_roundsDecimals() {
+        val parsed = NutritionOcrParser.parseNutritionFromLabel("Protein 5.6g")
+
+        assertEquals(6, parsed.protein)
+    }
 }

@@ -46,4 +46,24 @@ class GlarmToExportTest {
         assertTrue(csv.contains("water,"))
         assertTrue(csv.contains("S;50.0;10"))
     }
+
+    @Test
+    fun `toCsv quotes nutrition food names containing commas and quotes`() {
+        val csv = GlarmToExport.toCsv(
+            workouts = emptyList(),
+            nutrition = listOf(NutritionEntity(1, "Rice, \"fried\"", 300, 2L, "u")),
+            water = emptyList()
+        )
+        assertTrue(csv.contains("nutrition,1,u,2,\"Rice, \"\"fried\"\";300\""))
+    }
+
+    @Test
+    fun `toCsv quotes usernames containing commas in water rows`() {
+        val csv = GlarmToExport.toCsv(
+            workouts = emptyList(),
+            nutrition = emptyList(),
+            water = listOf(WaterEntity(1, "a,b", 3L, 250))
+        )
+        assertTrue(csv.contains("water,1,\"a,b\",3,250"))
+    }
 }

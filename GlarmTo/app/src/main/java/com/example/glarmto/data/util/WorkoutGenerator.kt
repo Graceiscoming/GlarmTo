@@ -231,7 +231,7 @@ object WorkoutGenerator {
      * - Rep-range top was hit last time -> bump ~2.5%, rounded to a realistic plate/dumbbell increment.
      * - Otherwise -> repeat last weight and chase more reps.
      */
-    private fun progressiveOverload(
+    internal fun progressiveOverload(
         def: ExerciseDef,
         targetReps: String,
         history: ExerciseHistoryStats?
@@ -253,7 +253,9 @@ object WorkoutGenerator {
                 deloaded to "Progress has stalled the last few sessions — deload to %.1fkg to reset and chase reps.".format(deloaded)
             }
             hitTop -> {
-                val bumped = roundToIncrement(history.lastWeight * 1.025, def.equipment)
+                val rounded = roundToIncrement(history.lastWeight * 1.025, def.equipment)
+                // 2.5% of a light weight is smaller than half a plate step and would round back to the same weight.
+                val bumped = if (rounded > history.lastWeight) rounded else history.lastWeight + incrementFor(def.equipment)
                 val delta = bumped - history.lastWeight
                 bumped to "+%.1fkg from last time 💪 (was %.1fkg x %d)".format(delta, history.lastWeight, history.lastReps)
             }
@@ -263,8 +265,10 @@ object WorkoutGenerator {
         }
     }
 
+    private fun incrementFor(equipment: Equipment): Double = if (equipment == Equipment.Barbell) 2.5 else 1.25
+
     private fun roundToIncrement(value: Double, equipment: Equipment): Double {
-        val increment = if (equipment == Equipment.Barbell) 2.5 else 1.25
+        val increment = incrementFor(equipment)
         return round(value / increment) * increment
     }
 }

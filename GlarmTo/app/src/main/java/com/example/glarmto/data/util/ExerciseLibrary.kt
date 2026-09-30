@@ -66,4 +66,29 @@ object ExerciseLibrary {
     fun getMuscleFor(exerciseName: String): MuscleGroup? {
         return exercises.find { it.name.equals(exerciseName, ignoreCase = true) }?.primaryMuscle
     }
+
+    /**
+     * Muscle for any exercise name: an exact library match first, then a keyword guess for names the
+     * user typed themselves. Returns null when neither knows the exercise.
+     */
+    fun classify(exerciseName: String): MuscleGroup? =
+        getMuscleFor(exerciseName.trim()) ?: keywordMuscle(exerciseName)
+
+    // Checked in order, so the specific wins over the generic: "Leg Raises" is Core before it is Legs,
+    // "Leg Curl" is Legs before it is Arms, "Overhead Tricep Extension" is Arms before it is Shoulders,
+    // and a bare "press"/"raise"/"pull" only applies once nothing more specific matched.
+    private val keywordRules: List<Pair<MuscleGroup, Regex>> = listOf(
+        MuscleGroup.Core to Regex("""crunch|plank|sit ?ups?|\babs?\b|woodchop|leg raise|knee raise|russian twist|ab wheel|\bcore\b"""),
+        MuscleGroup.Legs to Regex("""\blegs?\b|squat|lunge|calf|hamstring|quad|glute|hip thrust|romanian|\brdl\b|step ?ups?"""),
+        MuscleGroup.Arms to Regex("""tricep|bicep|curl|skull ?crusher|push ?down|preacher|forearm|\barms?\b|hammer"""),
+        MuscleGroup.Shoulders to Regex("""shoulder|overhead press|military|arnold|lateral raise|front raise|rear delt|\bdelts?\b|face pull|upright row|shrug|\braise"""),
+        MuscleGroup.Back to Regex("""pull ?ups?|chin ?ups?|pull ?down|lat pull|\blats?\b|\brow|deadlift|\bback\b|\bpull"""),
+        MuscleGroup.Chest to Regex("""bench|chest|push ?ups?|\bpecs?\b|\bfly\b|\bflye\b|\bdips?\b|crossover|\bpress|\bpush""")
+    )
+
+    internal fun keywordMuscle(exerciseName: String): MuscleGroup? {
+        val normalized = exerciseName.lowercase().replace(Regex("[^a-z0-9]+"), " ").trim()
+        if (normalized.isEmpty()) return null
+        return keywordRules.firstOrNull { (_, regex) -> regex.containsMatchIn(normalized) }?.first
+    }
 }

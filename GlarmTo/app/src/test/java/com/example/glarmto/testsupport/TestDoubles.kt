@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.flowOf
 /**
  * In-memory DAO for JVM unit tests (no Room).
  */
-class RecordingFakeGlarmToDao : GlarmToDao {
+open class RecordingFakeGlarmToDao : GlarmToDao {
 
     val mockUserFlow = MutableStateFlow<UserEntity?>(null)
     var lastUpdatedUser: UserEntity? = null
@@ -125,6 +125,24 @@ class RecordingFakeGlarmToDao : GlarmToDao {
         val before = insertedWater.size
         insertedWater.removeAll { it.id == id }
         return if (insertedWater.size < before) 1 else 0
+    }
+
+    override fun getWorkoutXp(id: Int): Int? = insertedWorkouts.find { it.id == id }?.xpAwarded
+
+    override fun setWorkoutXp(id: Int, xp: Int): Int {
+        val i = insertedWorkouts.indexOfFirst { it.id == id }
+        if (i < 0) return 0
+        insertedWorkouts[i] = insertedWorkouts[i].copy(xpAwarded = xp)
+        return 1
+    }
+
+    override fun getNutritionXp(id: Int): Int? = insertedNutrition.find { it.id == id }?.xpAwarded
+
+    override fun setNutritionXp(id: Int, xp: Int): Int {
+        val i = insertedNutrition.indexOfFirst { it.id == id }
+        if (i < 0) return 0
+        insertedNutrition[i] = insertedNutrition[i].copy(xpAwarded = xp)
+        return 1
     }
 
     override fun getAllWorkoutsForUser(username: String): List<WorkoutEntity> =

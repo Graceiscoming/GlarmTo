@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.glarmto.data.util.InstagramShareHelper
+import com.example.glarmto.data.util.MuscleBalance
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -224,26 +225,9 @@ class DashboardViewModel(
             val endMillis = repository.getDayRange(cal).second
             cal.add(Calendar.DAY_OF_YEAR, -30) // Last 30 days for Radar
             val startMillis = repository.getDayRange(cal).first
-            
+
             repository.getWorkoutsForRange(startMillis, endMillis).map { workouts ->
-                val counts = mutableMapOf(
-                    "Chest" to 0, "Back" to 0, "Legs" to 0, "Arms" to 0, "Shoulders" to 0
-                )
-                
-                workouts.forEach { w ->
-                    val name = w.exerciseName.lowercase()
-                    when {
-                        name.contains("bench") || name.contains("chest") || name.contains("push") || name.contains("pec") -> counts["Chest"] = counts["Chest"]!! + 1
-                        name.contains("pull") || name.contains("row") || name.contains("back") || name.contains("lat") -> counts["Back"] = counts["Back"]!! + 1
-                        name.contains("squat") || name.contains("leg") || name.contains("calf") || name.contains("press") -> counts["Legs"] = counts["Legs"]!! + 1
-                        name.contains("curl") || name.contains("tri") || name.contains("bi") || name.contains("arm") -> counts["Arms"] = counts["Arms"]!! + 1
-                        name.contains("shoulder") || name.contains("overhead") || name.contains("raise") || name.contains("delt") -> counts["Shoulders"] = counts["Shoulders"]!! + 1
-                        else -> {} // Uncat
-                    }
-                }
-                
-                val maxSets = counts.values.maxOrNull()?.toFloat()?.coerceAtLeast(1f) ?: 1f
-                counts.mapValues { it.value.toFloat() / maxSets } // Normalize 0f to 1f
+                MuscleBalance.radarScores(workouts.map { it.exerciseName })
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())

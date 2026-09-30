@@ -120,7 +120,7 @@ class GlarmToRepositoryTest {
         val staticSession = StaticFakeSessionManager()
         val repo = GlarmToRepository(dao, staticSession)
         dao.insertedWorkouts.add(
-            WorkoutEntity(id = 1, exerciseName = "A", weight = 1.0, reps = 1, dateInMillis = today, username = "testuser")
+            WorkoutEntity(id = 1, exerciseName = "A", weight = 1.0, reps = 1, dateInMillis = today, username = "testuser", xpAwarded = 10)
         )
 
         repo.deleteWorkout(1)

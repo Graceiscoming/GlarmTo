@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.glarmto.data.util.BarcodeNutrition
+import com.example.glarmto.data.util.BarcodeScanGate
 import com.example.glarmto.data.util.NutritionOcrParser
 import com.example.glarmto.data.util.OpenFoodFactsApi
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -52,25 +53,26 @@ fun CameraScannerScreen(
     val coroutineScope = rememberCoroutineScope()
     
     var isProcessing by remember { mutableStateOf(false) }
-    val ignoredBarcodes = remember { mutableStateListOf<String>() }
+    val barcodeGate = remember { BarcodeScanGate() }
     var notFoundBarcode by remember { mutableStateOf<String?>(null) }
+
+    // A "not found" barcode is already ignored by the gate; dismissing just re-opens scanning.
+    val dismissNotFound = {
+        barcodeGate.dismissNotFound()
+        notFoundBarcode = null
+        isProcessing = false
+    }
 
     if (notFoundBarcode != null) {
         AlertDialog(
-            onDismissRequest = { 
-                ignoredBarcodes.add(notFoundBarcode!!)
-                notFoundBarcode = null
-            },
+            onDismissRequest = dismissNotFound,
             title = { Text("Product Not Found", fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
             text = { Text("ไม่พบข้อมูลสินค้าจากบาร์โค้ดนี้ในระบบ คุณต้องการสแกนบาร์โค้ดอื่นต่อ หรือ กลับไปพิมพ์ข้อมูลเอง?") },
             confirmButton = {
                 Button(onClick = { onCancel() }) { Text("พิมพ์ข้อมูลเอง") }
             },
             dismissButton = {
-                TextButton(onClick = { 
-                    ignoredBarcodes.add(notFoundBarcode!!)
-                    notFoundBarcode = null 
-                }) { Text("สแกนชิ้นอื่นต่อ") }
+                TextButton(onClick = dismissNotFound) { Text("สแกนชิ้นอื่นต่อ") }
             }
         )
     }
@@ -126,15 +128,18 @@ fun CameraScannerScreen(
                                         .addOnSuccessListener { barcodes ->
                                             if (barcodes.isNotEmpty()) {
                                                 val rawValue = barcodes.first().rawValue
-                                                if (!rawValue.isNullOrBlank() && !ignoredBarcodes.contains(rawValue)) {
+                                                if (rawValue != null && barcodeGate.tryBegin(rawValue)) {
                                                     isProcessing = true
                                                     coroutineScope.launch {
                                                         val result = OpenFoodFactsApi.getNutritionByBarcode(rawValue)
                                                         if (result != null) {
+                                                            barcodeGate.onFound()
                                                             onResult(result)
                                                         } else {
+                                                            // Stay "processing" until the dialog is dismissed so the camera
+                                                            // can't start another lookup behind it.
+                                                            barcodeGate.onNotFound(rawValue)
                                                             notFoundBarcode = rawValue
-                                                            isProcessing = false
                                                         }
                                                     }
                                                 }
@@ -208,7 +213,7 @@ fun CameraScannerScreen(
                     )
                 }
                 
-                if (isProcessing) {
+                if (isProcessing && notFoundBarcode == null) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                 } else {
                     Spacer(modifier = Modifier.height(48.dp))

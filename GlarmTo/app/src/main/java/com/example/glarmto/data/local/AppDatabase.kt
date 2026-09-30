@@ -14,7 +14,7 @@ import com.example.glarmto.data.local.entity.WaterEntity
 import com.example.glarmto.data.local.entity.WorkoutEntity
 import com.example.glarmto.data.local.entity.WorkoutSessionEntity
 
-@Database(entities = [WorkoutEntity::class, NutritionEntity::class, UserEntity::class, RoutineEntity::class, WorkoutSessionEntity::class, WaterEntity::class], version = 12, exportSchema = false)
+@Database(entities = [WorkoutEntity::class, NutritionEntity::class, UserEntity::class, RoutineEntity::class, WorkoutSessionEntity::class, WaterEntity::class], version = 13, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun glarmToDao(): GlarmToDao
@@ -117,6 +117,20 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        val MIGRATION_12_13 = object : Migration(12, 13) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // Rows logged before XP was tracked per entry are assumed to have earned the standard
+                // amount (10 per set, 5 per meal), which is what deleting them used to take back.
+                db.execSQL("ALTER TABLE workout_log ADD COLUMN xpAwarded INTEGER NOT NULL DEFAULT 10")
+                db.execSQL("ALTER TABLE nutrition_log ADD COLUMN xpAwarded INTEGER NOT NULL DEFAULT 5")
+            }
+        }
+
+        val ALL_MIGRATIONS: Array<Migration> = arrayOf(
+            MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7,
+            MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13
+        )
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -124,7 +138,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "glarmto_database"
                 )
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+                .addMigrations(*ALL_MIGRATIONS)
                 .build()
                 INSTANCE = instance
                 instance

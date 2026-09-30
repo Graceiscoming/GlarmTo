@@ -7,11 +7,14 @@ import com.example.glarmto.data.local.entity.UserEntity
 import com.example.glarmto.data.local.entity.WaterEntity
 import com.example.glarmto.data.local.entity.WorkoutEntity
 import com.example.glarmto.data.util.GlarmToExport
+import com.example.glarmto.data.util.LevelMath
 import com.example.glarmto.data.preferences.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 
@@ -29,7 +32,14 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
 
     companion object {
         private const val DAY_MS = 24L * 60 * 60 * 1000
+        const val XP_PER_SET = 10
+        const val XP_PER_MEAL = 5
+        const val DAILY_XP_CAP = 300L
     }
+
+    // awardXP/revokeXP read the user row, change it, and write it back. Without this, two calls at
+    // the same time (e.g. two quick taps) both read the same XP and one of the awards is lost.
+    private val xpMutex = Mutex()
 
     // Helper to get start and end of a specific day in millis
     fun getDayRange(calendar: Calendar): Pair<Long, Long> {
@@ -97,15 +107,20 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
     suspend fun insertWorkout(workout: WorkoutEntity, awardXp: Boolean = true) {
         val username = sessionManager.getCurrentUser() ?: return
         withContext(Dispatchers.IO) {
-            dao.insertWorkout(workout.copy(username = username))
-            if (awardXp) awardXP(10) // 10 XP per set
+            val id = dao.insertWorkout(workout.copy(username = username, xpAwarded = 0)).toInt()
+            if (awardXp) {
+                val earned = awardXP(XP_PER_SET)
+                if (earned > 0) dao.setWorkoutXp(id, earned)
+            }
         }
     }
 
+    /** Deletes a set and takes back exactly the XP that set earned (none if it earned nothing). */
     suspend fun deleteWorkout(id: Int) {
         withContext(Dispatchers.IO) {
+            val earned = dao.getWorkoutXp(id) ?: 0
             dao.deleteWorkout(id)
-            revokeXP(10)
+            if (earned > 0) revokeXP(earned)
         }
     }
 
@@ -161,8 +176,11 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
     suspend fun insertNutrition(nutrition: NutritionEntity, awardXp: Boolean = true) {
         val username = sessionManager.getCurrentUser() ?: return
         withContext(Dispatchers.IO) {
-            dao.insertNutrition(nutrition.copy(username = username))
-            if (awardXp) awardXP(5) // 5 XP per food item
+            val id = dao.insertNutrition(nutrition.copy(username = username, xpAwarded = 0)).toInt()
+            if (awardXp) {
+                val earned = awardXP(XP_PER_MEAL)
+                if (earned > 0) dao.setNutritionXp(id, earned)
+            }
         }
     }
 
@@ -261,7 +279,8 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
                         id = 0,
                         dateInMillis = targetDayMillis,
                         sessionId = sessionId,
-                        username = username
+                        username = username,
+                        xpAwarded = 0 // copying earns no XP, so deleting a copy must not take any back
                     )
                 )
             }
@@ -279,16 +298,18 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
             val list = dao.getNutritionBetween(username, s, e)
             for (n in list) {
                 dao.insertNutrition(
-                    n.copy(id = 0, dateInMillis = targetDayMillis, username = username)
+                    n.copy(id = 0, dateInMillis = targetDayMillis, username = username, xpAwarded = 0)
                 )
             }
         }
     }
 
+    /** Deletes a meal and takes back exactly the XP it earned (none if it earned nothing). */
     suspend fun deleteNutrition(id: Int) {
         withContext(Dispatchers.IO) {
+            val earned = dao.getNutritionXp(id) ?: 0
             dao.deleteNutrition(id)
-            revokeXP(5)
+            if (earned > 0) revokeXP(earned)
         }
     }
 
@@ -360,58 +381,54 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
     fun getCurrentUser() = sessionManager.getCurrentUser()
     fun isProfileSetup() = sessionManager.isProfileSetup()
 
-    fun getTotalXPThreshold(level: Int): Long {
-        if (level <= 1) return 0L
-        return (1000.0 * (Math.pow(1.1, (level - 1).toDouble()) - 1.0)).toLong()
-    }
+    fun getTotalXPThreshold(level: Int): Long = LevelMath.totalXpThreshold(level)
 
-    fun getXPRequiredForNextLevel(currentLevel: Int): Long {
-        return (100.0 * Math.pow(1.1, (currentLevel - 1).toDouble())).toLong()
-    }
+    fun getXPRequiredForNextLevel(currentLevel: Int): Long = LevelMath.xpRequiredForNextLevel(currentLevel)
 
-    suspend fun awardXP(amount: Int) {
-        val username = sessionManager.getCurrentUser() ?: return
-        val user = dao.getUser(username).firstOrNull() ?: return
-        
+    /**
+     * Adds XP, capped at [DAILY_XP_CAP] per day.
+     * @return how much XP was actually added (0 when the daily cap is already reached).
+     */
+    suspend fun awardXP(amount: Int): Int = xpMutex.withLock {
+        val username = sessionManager.getCurrentUser() ?: return@withLock 0
+        val user = dao.getUser(username).firstOrNull() ?: return@withLock 0
+
         val today = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }.timeInMillis
-        
+
         val currentDailyXP = if (user.lastXPDate < today) 0L else user.dailyXPEarned
-        
-        // XP Cap: 300 per day
-        val xpToAward = if (currentDailyXP + amount > 300) {
-            (300 - currentDailyXP).coerceAtLeast(0).toInt()
+
+        val xpToAward = if (currentDailyXP + amount > DAILY_XP_CAP) {
+            (DAILY_XP_CAP - currentDailyXP).coerceAtLeast(0).toInt()
         } else {
             amount
         }
-        
-        if (xpToAward <= 0) return
+
+        if (xpToAward <= 0) return@withLock 0
 
         val newTotalXP = user.xp + xpToAward
         val newDailyXP = currentDailyXP + xpToAward
-        
-        // Level Formula: L = log1.1(XP/1000 + 1) + 1
-        val newLevel = (Math.log(newTotalXP / 1000.0 + 1.0) / Math.log(1.1)).toInt() + 1
-        
+
         dao.updateUser(user.copy(
-            xp = newTotalXP, 
-            level = newLevel,
+            xp = newTotalXP,
+            level = LevelMath.levelForXp(newTotalXP),
             dailyXPEarned = newDailyXP,
             lastXPDate = today
         ))
+        xpToAward
     }
 
     /**
      * Mirrors [awardXP] when removing a set (10) or meal (5). Total XP never below 0.
      * Daily XP bucket is reduced only when [UserEntity.lastXPDate] is still "today".
      */
-    suspend fun revokeXP(amount: Int) {
-        val username = sessionManager.getCurrentUser() ?: return
-        val user = dao.getUser(username).firstOrNull() ?: return
+    suspend fun revokeXP(amount: Int) = xpMutex.withLock {
+        val username = sessionManager.getCurrentUser() ?: return@withLock
+        val user = dao.getUser(username).firstOrNull() ?: return@withLock
 
         val startOfToday = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)
@@ -421,7 +438,6 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
         }.timeInMillis
 
         val newTotalXP = (user.xp - amount.toLong()).coerceAtLeast(0L)
-        val newLevel = (Math.log(newTotalXP / 1000.0 + 1.0) / Math.log(1.1)).toInt() + 1
 
         val newDailyXP = if (user.lastXPDate >= startOfToday) {
             (user.dailyXPEarned - amount).coerceAtLeast(0L)
@@ -432,7 +448,7 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
         dao.updateUser(
             user.copy(
                 xp = newTotalXP,
-                level = newLevel.coerceAtLeast(1),
+                level = LevelMath.levelForXp(newTotalXP),
                 dailyXPEarned = newDailyXP,
                 lastXPDate = user.lastXPDate
             )

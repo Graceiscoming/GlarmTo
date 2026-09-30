@@ -9,5 +9,7 @@ data class NutritionEntity(
     val foodName: String,
     val calories: Int,
     val dateInMillis: Long,
-    val username: String = "admin"
+    val username: String = "admin",
+    /** XP this entry actually earned (0 if none), so deleting it takes back only that much. */
+    val xpAwarded: Int = 0
 )

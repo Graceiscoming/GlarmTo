@@ -35,6 +35,12 @@ interface GlarmToDao {
     @Query("DELETE FROM workout_log WHERE id = :id")
     fun deleteWorkout(id: Int): Int
 
+    @Query("SELECT xpAwarded FROM workout_log WHERE id = :id")
+    fun getWorkoutXp(id: Int): Int?
+
+    @Query("UPDATE workout_log SET xpAwarded = :xp WHERE id = :id")
+    fun setWorkoutXp(id: Int, xp: Int): Int
+
     @Query("SELECT * FROM workout_log WHERE username = :username AND exerciseName = :name ORDER BY id DESC LIMIT 1")
     fun getLatestWorkoutByName(username: String, name: String): WorkoutEntity?
 
@@ -60,6 +66,12 @@ interface GlarmToDao {
 
     @Query("DELETE FROM nutrition_log WHERE id = :id")
     fun deleteNutrition(id: Int): Int
+
+    @Query("SELECT xpAwarded FROM nutrition_log WHERE id = :id")
+    fun getNutritionXp(id: Int): Int?
+
+    @Query("UPDATE nutrition_log SET xpAwarded = :xp WHERE id = :id")
+    fun setNutritionXp(id: Int, xp: Int): Int
 
     // Routine Queries
     @Query("SELECT * FROM routine_log WHERE username = :username ORDER BY id ASC")

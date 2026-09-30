@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/Graceiscoming/CP213_LearnAndroid/main/Project/GlarmTo/app/src/main/res/mipmap-xxhdpi/logo.webp" alt="GlarmTo Logo" width="150"/>
+  <img src="https://raw.githubusercontent.com/Graceiscoming/GlarmTo/main/GlarmTo/app/src/main/res/mipmap-xxhdpi/logo.webp" alt="GlarmTo Logo" width="150"/>
   <h1>💪 GlarmTo (กล้ามโต) - Smart Fitness Companion 🤖</h1>
   <p>The Ultimate AI-Powered Workout Tracker & Gamified Fitness Experience</p>
 
@@ -13,7 +13,7 @@
   </p>
   
   <h3>
-    <a href="https://github.com/Graceiscoming/CP213_LearnAndroid/releases/latest">
+    <a href="https://github.com/Graceiscoming/GlarmTo/releases/latest">
       <img src="https://img.shields.io/badge/📱_Download_APK-FF3366?style=for-the-badge&logo=android&logoColor=white" alt="Download APK">
     </a>
   </h3>
@@ -150,9 +150,9 @@
 ### 💻 วิธีที่ 2: รันผ่าน Android Studio
 1. Clone โปรเจกต์:
    ```bash
-   git clone https://github.com/Graceiscoming/CP213_LearnAndroid.git
+   git clone https://github.com/Graceiscoming/GlarmTo.git
    ```
-2. เปิดโปรเจกต์ใน **Android Studio (Jellyfish หรือใหม่กว่า)** โดยเลือกเปิดที่โฟลเดอร์ `Project/GlarmTo`
+2. เปิดโปรเจกต์ใน **Android Studio (Jellyfish หรือใหม่กว่า)** โดยเลือกเปิดที่โฟลเดอร์ `GlarmTo`
 3. รอจังหวะให้ Gradle ทำการโหลดและ Sync ไลบรารีให้สำเร็จ
 4. **แนะนำอย่างยิ่ง** ให้เชื่อมต่อ **สมาร์ทโฟน Android เครื่องจริง** เพื่อรันโปรเจกต์ (แทนการใช้ Emulator) เนื่องจากฟีเจอร์ "กล้อง AI จับท่าทาง" และ "ระบบสั่งการด้วยเสียง" ต้องการเข้าถึงฮาร์ดแวร์จริงเพื่อให้ได้ประสบการณ์สูงสุด
 5. กดปุ่ม `Run` (สัญลักษณ์ Play สีเขียว) หรือ `Shift + F10`

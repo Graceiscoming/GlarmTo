@@ -1,5 +1,6 @@
 package com.example.glarmto.ui.nutrition
 
+import com.example.glarmto.data.util.BarcodeNutrition
 import com.example.glarmto.R
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
@@ -74,16 +75,30 @@ fun NutritionScreen() {
     }
 
     var activeScannerMode by remember { mutableStateOf<ScannerMode?>(null) }
+    // A scanned barcode whose nutrition the user is about to type in; saved with the entry so it is found next time.
+    var barcodeToRemember by remember { mutableStateOf<String?>(null) }
     
     if (activeScannerMode != null) {
         CameraScannerScreen(
             mode = activeScannerMode!!,
-            onResult = { macroData ->
-                foodName = macroData.productName
-                calories = macroData.calories.toString()
+            onResult = { macroData, scannedBarcode ->
+                val named = macroData.productName.ifBlank {
+                    context.getString(if (activeScannerMode == ScannerMode.OCR) R.string.scanned_label else R.string.scanned_product)
+                }
+                // Values for 100 g (not one serving) are marked so they aren't mistaken for a portion.
+                foodName = if (macroData.per100g) named + " " + context.getString(R.string.per_100g_suffix) else named
+                if (macroData.nutritionKnown) {
+                    calories = macroData.calories.toString()
+                    barcodeToRemember = null
+                } else {
+                    // Only the name is known: the user fills in the calories from the pack, and we remember them.
+                    calories = ""
+                    barcodeToRemember = scannedBarcode
+                }
                 activeScannerMode = null
             },
-            onCancel = { activeScannerMode = null }
+            onCancel = { activeScannerMode = null },
+            onEnterManually = { barcodeToRemember = it }
         )
         return // Take over the entire screen while scanning
     }
@@ -299,6 +314,11 @@ fun NutritionScreen() {
                                 if (cal != null && cal > 0) {
                                     val name = if (foodName.isNotBlank()) foodName.trim() else context.getString(R.string.quick_add)
                                     viewModel.addNutrition(foodName = name, calories = cal)
+                                    barcodeToRemember?.let {
+                                        (context.applicationContext as GlarmToApplication).productLookup
+                                            .remember(it, BarcodeNutrition(name, cal, 0, 0, 0))
+                                    }
+                                    barcodeToRemember = null
                                     foodName = ""
                                     calories = ""
                                     focusManager.clearFocus()
@@ -313,15 +333,18 @@ fun NutritionScreen() {
                         }
                     }
                     
+                    if (barcodeToRemember != null) {
+                        Text(
+                            stringResource(R.string.barcode_enter_calories_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                         OutlinedButton(
-                            onClick = {
-                                if (NetworkUtil.isInternetAvailable(context)) {
-                                    activeScannerMode = ScannerMode.BARCODE
-                                } else {
-                                    showNoInternetDialog = true
-                                }
-                            },
+                            // Works without internet: the bundled product list covers common Thai products.
+                            onClick = { activeScannerMode = ScannerMode.BARCODE },
                             modifier = Modifier.weight(1f)
                         ) {
                             Text(stringResource(R.string.scan_barcode))

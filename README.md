@@ -60,7 +60,7 @@
 
 ### 🧮 4. Advanced Calculators & Nutrition (โภชนาการและการคำนวณ)
 *   🍔 **TDEE & Macro Tracker:** คํานวณพลังงานที่ใช้ต่อวันและแจกแจงโควต้า P/C/F (โปรตีน/คาร์บ/ไขมัน) ตามเป้าหมายส่วนบุคคล (ลดไขมัน / รักษาน้ำหนัก / เพิ่มกล้ามเนื้อ)
-*   📷 **Barcode & Label Scanner:** สแกนบาร์โค้ดสินค้าด้วย **Google ML Kit (Barcode Scanning)** เพื่อดึงข้อมูลโภชนาการเข้าแอปอัตโนมัติ โดยเชื่อมต่อกับฐานข้อมูลสินค้าไทยกว่า 600+ รายการและ OpenFoodFacts API หรือสแกน **ฉลากโภชนาการ (OCR)** ได้ (ถ้าเป็นข้อมูลต่อ 100g จะระบุไว้ในชื่อ) กล้องจะถูกปิดทันทีเมื่อออกจากหน้าสแกน
+*   📷 **Barcode & Label Scanner:** สแกนบาร์โค้ดสินค้าด้วย **Google ML Kit (Barcode Scanning)** เพื่อดึงข้อมูลโภชนาการเข้าแอปอัตโนมัติ โดยค้นหาตามลำดับ: สินค้าที่ผู้ใช้เคยบันทึกเอง → แคช → ฐานข้อมูลในแอป (สินค้าไทย/ที่ขายในไทยราว 19,000 รายการจาก Open Food Facts ใช้ได้แม้ไม่มีเน็ต) → Open Food Facts API ออนไลน์ (เฉพาะเมื่อไม่พบ) สินค้าที่มีแค่ชื่อแต่ไม่มีข้อมูลโภชนาการจะให้กรอกแคลอรี่เอง แล้วแอปจำไว้ให้สแกนครั้งหน้า หรือสแกน **ฉลากโภชนาการ (OCR)** ได้ (ถ้าเป็นข้อมูลต่อ 100g จะระบุไว้ในชื่อ) กล้องจะถูกปิดทันทีเมื่อออกจากหน้าสแกน
 *   🌊 **Animated Water Tracker:** ระบบบันทึกการดื่มน้ำที่มาพร้อม "แอนิเมชันคลื่นน้ำ (Wave Effect)" ที่ระดับน้ำจะค่อยๆ เพิ่มสูงขึ้นตามแก้วน้ำจริง
 *   💪 **1RM (One-Rep Max) Calculator:** เครื่องมือประเมินระดับความแกร่งสูงสุด (ยกได้หนักสุดกี่กิโล) ด้วยสูตรคณิตศาสตร์ Epley Formula
 *   🏋️ **Plate Load Calculator:** เครื่องมือช่วยคำนวณการใส่แผ่นเหล็ก (Plates) บนบาร์เบล ว่าต้องใส่แผ่น 20kg หรือ 10kg ข้างละกี่แผ่นให้ได้น้ำหนักพอดี
@@ -100,7 +100,7 @@
 *   📂 **`util/`** (ลอจิกล้วน ทดสอบได้ง่าย ส่วนใหญ่ไม่พึ่ง Android)
     *   **คำนวณ/โมเดล:** `HealthCalculator` (TDEE, มาโคร), `PlateCalculator`, `LevelMath` (เส้นโค้งเลเวล), `RecoveryCalculator` (โมเดลความล้า 48 ชม.), `CalorieBurnModel` (Linear Regression), `PoseAngleMath`, `MuscleBalance`
     *   **AI ออฟไลน์:** `WorkoutGenerator` (สร้างแผนซ้อมและแนะนำน้ำหนัก), `ExerciseLibrary` (รายการท่าและการจัดกลุ่มกล้ามเนื้อ), `ExercisePresets`
-    *   **โภชนาการ:** `ThaiProductDatabase`, `OpenFoodFactsApi`, `NutritionOcrParser`, `BarcodeScanGate` (กันสแกนบาร์โค้ดเดิมซ้ำ)
+    *   **โภชนาการ:** `BarcodeNormalizer`, `ProductLookup` (ลำดับการค้นหา), `ProductDataset` (อ่านไฟล์ `assets/thai_products.tsv`), `ProductCache`, `OpenFoodFactsApi`, `NutritionOcrParser`, `BarcodeScanGate` (กันสแกนบาร์โค้ดเดิมซ้ำ)
     *   **ระบบ:** `PasswordHasher` (PBKDF2), `TodayTracker` + `CalendarDayUtils` (จัดการ "วันนี้"), `GlarmToExport` (JSON/CSV), `NetworkUtil`
     *   **ข้อความหลายภาษา:** `AppTexts` (ดึงข้อความตามภาษาปัจจุบันให้โค้ดที่ไม่ใช่หน้าจอ), `DisplayNames` (ชื่อกล้ามเนื้อ/อุปกรณ์/เป้าหมายที่แสดงผล)
     *   **`InstagramShareHelper.kt`**: คลาส Helper ที่แยกออกมาเขียนโค้ดวาด Canvas/Bitmap เพื่อแชร์ลง IG โดยเฉพาะ (การแยกไฟล์นี้โชว์ถึงความเข้าใจเรื่อง Single Responsibility Principle เพื่อไม่ให้ ViewModel มีลอจิกของการวาด UI ปนอยู่)
@@ -211,3 +211,6 @@ cd GlarmTo
 เปิดแอปแล้วกดปุ่ม **TH** (มุมขวาบนของหน้า Welcome หรือแถวไอคอนบนสุดของหน้า Dashboard) เพื่อเปลี่ยนเป็นภาษาไทย ปุ่มจะเปลี่ยนเป็น **EN** สำหรับกลับเป็นอังกฤษ
 
 ---
+
+### 📦 ข้อมูลสินค้าและลิขสิทธิ์
+ข้อมูลสินค้าในแอปมาจาก [Open Food Facts](https://world.openfoodfacts.org) ภายใต้สัญญา ODbL (แสดงเครดิตในหน้าสแกน และเก็บข้อความไว้ที่ `assets/OPEN_FOOD_FACTS_NOTICE.txt`) สร้างใหม่ได้ด้วย `python tools/build_thai_products.py <export.csv.gz>` (ทดสอบด้วย `python -m unittest discover -s tools -p "test_*.py"`)

@@ -45,7 +45,7 @@ object NutritionOcrParser {
             ?: 0
 
         return BarcodeNutrition(
-            productName = "Scanned Label",
+            productName = "", // the screen names it in the current language
             calories = calories,
             protein = proteinRegex.find(text)?.groupValues?.get(1)?.toRoundedInt() ?: 0,
             carbs = carbsRegex.find(text)?.groupValues?.get(1)?.toRoundedInt() ?: 0,

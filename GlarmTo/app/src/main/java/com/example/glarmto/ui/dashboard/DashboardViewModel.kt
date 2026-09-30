@@ -23,7 +23,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.glarmto.data.util.InstagramShareHelper
+import com.example.glarmto.data.util.CalendarDayUtils
 import com.example.glarmto.data.util.MuscleBalance
+import com.example.glarmto.data.util.TodayTracker
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -37,8 +39,17 @@ import java.util.Locale
  */
 class DashboardViewModel(
     private val application: Application,
-    private val repository: GlarmToRepository
+    private val repository: GlarmToRepository,
+    todayProvider: () -> Long = CalendarDayUtils::localTodayStartMillis
 ) : AndroidViewModel(application) {
+
+    // "Today" must follow the calendar, not the moment this ViewModel was created.
+    private val dayTracker = TodayTracker(todayProvider)
+
+    /** Call when the screen is shown again so a day change (e.g. after midnight) is picked up. */
+    fun refreshToday() {
+        dayTracker.refresh()
+    }
 
     val user: StateFlow<UserEntity?> = repository.getUserFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
@@ -51,25 +62,16 @@ class DashboardViewModel(
         // Goal is now refreshed automatically via Room flow
     }
 
-    private fun getTodayStartMillis(): Long {
-        return Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
-
-    val todayWorkouts: StateFlow<List<WorkoutEntity>> = repository.getWorkoutsForDay(getTodayStartMillis())
+    val todayWorkouts: StateFlow<List<WorkoutEntity>> = dayTracker.today.flatMapLatest { repository.getWorkoutsForDay(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val todaySessions: StateFlow<List<com.example.glarmto.data.local.entity.WorkoutSessionEntity>> = repository.getWorkoutSessionsForDay(getTodayStartMillis())
+    val todaySessions: StateFlow<List<com.example.glarmto.data.local.entity.WorkoutSessionEntity>> = dayTracker.today.flatMapLatest { repository.getWorkoutSessionsForDay(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val todayNutrition: StateFlow<List<NutritionEntity>> = repository.getNutritionForDay(getTodayStartMillis())
+    val todayNutrition: StateFlow<List<NutritionEntity>> = dayTracker.today.flatMapLatest { repository.getNutritionForDay(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val todayWaterMl: StateFlow<Int> = repository.getWaterForDay(getTodayStartMillis())
+    val todayWaterMl: StateFlow<Int> = dayTracker.today.flatMapLatest { repository.getWaterForDay(it) }
         .map { list -> list.sumOf { it.amountMl } }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
@@ -77,7 +79,7 @@ class DashboardViewModel(
         .map { it?.dailyWaterGoalMl ?: 2000 }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 2000)
 
-    val trainingStreakDays: StateFlow<Int> = repository.getTodayWorkouts()
+    val trainingStreakDays: StateFlow<Int> = dayTracker.today.flatMapLatest { repository.getWorkoutsForDay(it) }
         .flatMapLatest {
             flow { emit(repository.getTrainingStreakDays()) }
         }
@@ -92,7 +94,7 @@ class DashboardViewModel(
 
     val periodTrainingStats: StateFlow<PeriodTrainingStats> = combine(
         repository.getUserFlow(),
-        repository.getTodayWorkouts(),
+        dayTracker.today.flatMapLatest { repository.getWorkoutsForDay(it) },
         _statsPeriodDays
     ) { _, _, days -> days }
         .flatMapLatest { days ->
@@ -162,8 +164,8 @@ class DashboardViewModel(
         }
     }
 
-    val weeklyVolume: StateFlow<List<Pair<String, Double>>> = repository.getUserFlow()
-        .flatMapLatest { user ->
+    val weeklyVolume: StateFlow<List<Pair<String, Double>>> = combine(repository.getUserFlow(), dayTracker.today) { _, _ -> Unit }
+        .flatMapLatest {
             val cal = Calendar.getInstance()
             val endMillis = repository.getDayRange(cal).second
             cal.add(Calendar.DAY_OF_YEAR, -6)
@@ -192,8 +194,8 @@ class DashboardViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val heatmapData: StateFlow<List<Int>> = repository.getUserFlow()
-        .flatMapLatest { user ->
+    val heatmapData: StateFlow<List<Int>> = combine(repository.getUserFlow(), dayTracker.today) { _, _ -> Unit }
+        .flatMapLatest {
             val cal = Calendar.getInstance()
             val endMillis = repository.getDayRange(cal).second
             cal.add(Calendar.DAY_OF_YEAR, -90)
@@ -219,8 +221,8 @@ class DashboardViewModel(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val radarChartData: StateFlow<Map<String, Float>> = repository.getUserFlow()
-        .flatMapLatest { user ->
+    val radarChartData: StateFlow<Map<String, Float>> = combine(repository.getUserFlow(), dayTracker.today) { _, _ -> Unit }
+        .flatMapLatest {
             val cal = Calendar.getInstance()
             val endMillis = repository.getDayRange(cal).second
             cal.add(Calendar.DAY_OF_YEAR, -30) // Last 30 days for Radar
@@ -231,38 +233,6 @@ class DashboardViewModel(
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
-
-    val muscleRecoveryState: StateFlow<Map<String, Int>> = repository.getUserFlow()
-        .flatMapLatest { user ->
-            val cal = Calendar.getInstance()
-            val endMillis = repository.getDayRange(cal).second
-            cal.add(Calendar.HOUR_OF_DAY, -48) // Last 48 hours for Fatigue
-            val startMillis = cal.timeInMillis
-            
-            repository.getWorkoutsForRange(startMillis, endMillis).map { workouts ->
-                val counts = mutableMapOf(
-                    "Chest" to 0, "Back" to 0, "Legs" to 0, "Arms" to 0, "Shoulders" to 0
-                )
-                
-                workouts.forEach { w ->
-                    val name = w.exerciseName.lowercase()
-                    when {
-                        name.contains("bench") || name.contains("chest") || name.contains("push") || name.contains("pec") -> counts["Chest"] = counts["Chest"]!! + 1
-                        name.contains("pull") || name.contains("row") || name.contains("back") || name.contains("lat") -> counts["Back"] = counts["Back"]!! + 1
-                        name.contains("squat") || name.contains("leg") || name.contains("calf") || name.contains("press") -> counts["Legs"] = counts["Legs"]!! + 1
-                        name.contains("curl") || name.contains("tri") || name.contains("bi") || name.contains("arm") -> counts["Arms"] = counts["Arms"]!! + 1
-                        name.contains("shoulder") || name.contains("overhead") || name.contains("raise") || name.contains("delt") -> counts["Shoulders"] = counts["Shoulders"]!! + 1
-                        else -> {} 
-                    }
-                }
-                
-                // Recovery formula: 100% - (sets * 10). Coerce 0 to 100.
-                counts.mapValues { (100 - (it.value * 10)).coerceIn(0, 100) }
-            }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), mapOf(
-            "Chest" to 100, "Back" to 100, "Legs" to 100, "Arms" to 100, "Shoulders" to 100
-        ))
 }
 
 class DashboardViewModelFactory(

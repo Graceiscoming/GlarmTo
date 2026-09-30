@@ -33,7 +33,7 @@ import com.google.mlkit.vision.pose.Pose
 import com.google.mlkit.vision.pose.PoseDetection
 import com.google.mlkit.vision.pose.PoseLandmark
 import com.google.mlkit.vision.pose.defaults.PoseDetectorOptions
-import java.util.concurrent.Executors
+import com.example.glarmto.ui.camera.CameraSession
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -41,6 +41,10 @@ fun AiPoseTrackerScreen(onClose: () -> Unit) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Releases the camera, the pose detector and the analysis thread when this screen leaves.
+    val cameraSession = remember { CameraSession() }
+    DisposableEffect(cameraSession) { onDispose { cameraSession.close() } }
 
     var detectedPose by remember { mutableStateOf<Pose?>(null) }
     var scaleFactorX by remember { mutableStateOf(1f) }
@@ -67,6 +71,8 @@ fun AiPoseTrackerScreen(onClose: () -> Unit) {
 
                     val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
                     cameraProviderFuture.addListener({
+                        // The screen may have been closed before the camera provider was ready.
+                        if (cameraSession.isClosed) return@addListener
                         val cameraProvider = cameraProviderFuture.get()
 
                         val preview = Preview.Builder().build().also {
@@ -83,12 +89,11 @@ fun AiPoseTrackerScreen(onClose: () -> Unit) {
                         val options = PoseDetectorOptions.Builder()
                             .setDetectorMode(PoseDetectorOptions.STREAM_MODE)
                             .build()
-                        val poseDetector = PoseDetection.getClient(options)
-                        val executor = Executors.newSingleThreadExecutor()
+                        val poseDetector = cameraSession.own(PoseDetection.getClient(options))
 
-                        imageAnalysis.setAnalyzer(executor) { imageProxy ->
+                        imageAnalysis.setAnalyzer(cameraSession.analysisExecutor) { imageProxy ->
                             val mediaImage = imageProxy.image
-                            if (mediaImage != null) {
+                            if (!cameraSession.isClosed && mediaImage != null) {
                                 val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
                                 
                                 // Calculate scaling factors.
@@ -138,6 +143,8 @@ fun AiPoseTrackerScreen(onClose: () -> Unit) {
                                 preview,
                                 imageAnalysis
                             )
+                            val unbind = { cameraProvider.unbind(preview, imageAnalysis) }
+                            if (!cameraSession.onUnbind(unbind)) unbind()
                         } catch (exc: Exception) {
                             Log.e("Scanner", "Use case binding failed", exc)
                         }

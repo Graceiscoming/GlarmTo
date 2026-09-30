@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.animation.AnimatedVisibility
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.glarmto.GlarmToApplication
+import com.example.glarmto.ui.util.OnResume
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,6 +34,8 @@ fun HistoryScreen(isMonthly: Boolean = false, onBack: () -> Unit) {
     val viewModel: HistoryViewModel = viewModel(
         factory = HistoryViewModelFactory(application, application.repository)
     )
+
+    OnResume { viewModel.refreshToday() }
 
     LaunchedEffect(isMonthly) {
         viewModel.setViewMode(isMonthly)

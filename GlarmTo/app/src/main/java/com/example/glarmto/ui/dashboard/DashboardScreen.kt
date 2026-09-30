@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.background
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.glarmto.GlarmToApplication
+import com.example.glarmto.ui.util.OnResume
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import com.example.glarmto.ui.workout.RecoveryViewModel
@@ -38,6 +39,8 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
         factory = DashboardViewModelFactory(application, application.repository)
     )
 
+    OnResume { viewModel.refreshToday() }
+
     val recoveryViewModel: RecoveryViewModel = viewModel(
         factory = RecoveryViewModelFactory(application.repository)
     )
@@ -51,6 +54,8 @@ fun DashboardScreen(onLogout: () -> Unit = {}, onNavigateToHistory: (isMonthly: 
             recoveryViewModel.fetchAndCalculateRecovery()
         }
     }
+    // Sets logged while the app was in the background should show up in an already open card.
+    OnResume { if (showRecovery) recoveryViewModel.fetchAndCalculateRecovery() }
 
     val workouts by viewModel.todayWorkouts.collectAsState()
     val nutritions by viewModel.todayNutrition.collectAsState()

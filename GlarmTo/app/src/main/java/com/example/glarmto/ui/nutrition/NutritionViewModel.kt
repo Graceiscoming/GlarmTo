@@ -9,6 +9,7 @@ import com.example.glarmto.data.local.entity.NutritionEntity
 import com.example.glarmto.data.local.entity.WaterEntity
 import com.example.glarmto.data.repository.GlarmToRepository
 import com.example.glarmto.data.util.CalendarDayUtils
+import com.example.glarmto.data.util.TodayTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -22,8 +23,15 @@ import java.util.Calendar
 
 class NutritionViewModel(
     application: Application,
-    private val repository: GlarmToRepository
+    private val repository: GlarmToRepository,
+    todayProvider: () -> Long = CalendarDayUtils::localTodayStartMillis
 ) : AndroidViewModel(application) {
+
+    // "Today" must follow the calendar, not the moment this ViewModel was created.
+    private val dayTracker = TodayTracker(todayProvider)
+
+    /** The current local day; changes when the day rolls over. */
+    val today: StateFlow<Long> = dayTracker.today
 
     val dailyGoal: StateFlow<Int> = repository.getUserFlow()
         .map { it?.dailyGoal ?: 2500 }
@@ -32,7 +40,7 @@ class NutritionViewModel(
     val userFlow: StateFlow<com.example.glarmto.data.local.entity.UserEntity?> = repository.getUserFlow()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
-    private val _selectedDate = MutableStateFlow(CalendarDayUtils.localTodayStartMillis())
+    private val _selectedDate = MutableStateFlow(dayTracker.today.value)
     val selectedDate: StateFlow<Long> = _selectedDate.asStateFlow()
 
     @kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -48,6 +56,14 @@ class NutritionViewModel(
             repository.getNutritionForRange(start, end)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * Call when the screen is shown again. If the day rolled over and the user was looking at "today",
+     * the selected date moves to the new day; a day they picked themselves is kept.
+     */
+    fun refreshToday() {
+        dayTracker.refreshAndFollow(_selectedDate)
+    }
 
     fun setSelectedDateFromMaterialPicker(utcPickerMillis: Long) {
         _selectedDate.value = CalendarDayUtils.localDayStartFromMaterialPickerUtc(utcPickerMillis)

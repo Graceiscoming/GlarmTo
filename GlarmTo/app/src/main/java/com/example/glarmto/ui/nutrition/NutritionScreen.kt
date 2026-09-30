@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.glarmto.GlarmToApplication
+import com.example.glarmto.ui.util.OnResume
 import com.example.glarmto.data.util.CalendarDayUtils
 import com.example.glarmto.data.util.HealthCalculator
 import java.text.SimpleDateFormat
@@ -39,9 +40,12 @@ fun NutritionScreen() {
         factory = NutritionViewModelFactory(application, application.repository)
     )
 
+    OnResume { viewModel.refreshToday() }
+
     val nutritions by viewModel.nutritionList.collectAsState()
     val dailyGoal by viewModel.dailyGoal.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()
+    val today by viewModel.today.collectAsState()
     val user by viewModel.userFlow.collectAsState()
     val waterEntries by viewModel.waterEntries.collectAsState()
 
@@ -61,8 +65,8 @@ fun NutritionScreen() {
         HealthCalculator.macroGramsFromCalories(dailyGoal, u.macroProteinPct, u.macroCarbPct, u.macroFatPct)
     } ?: Triple(0, 0, 0)
 
-    val isNutritionDateValid = remember(selectedDate) {
-        val (start, end) = CalendarDayUtils.nutritionEditableLocalRange()
+    val isNutritionDateValid = remember(selectedDate, today) {
+        val (start, end) = CalendarDayUtils.nutritionEditableLocalRange(today)
         val day = CalendarDayUtils.normalizeToLocalDayStart(selectedDate)
         day in start..end
     }

@@ -9,6 +9,7 @@ import com.example.glarmto.data.local.entity.NutritionEntity
 import com.example.glarmto.data.local.entity.WorkoutEntity
 import com.example.glarmto.data.repository.GlarmToRepository
 import com.example.glarmto.data.util.CalendarDayUtils
+import com.example.glarmto.data.util.TodayTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -21,10 +22,14 @@ import java.util.Calendar
 
 class HistoryViewModel(
     application: Application,
-    private val repository: GlarmToRepository
+    private val repository: GlarmToRepository,
+    todayProvider: () -> Long = CalendarDayUtils::localTodayStartMillis
 ) : AndroidViewModel(application) {
 
-    private val _selectedDate = MutableStateFlow(CalendarDayUtils.localTodayStartMillis())
+    // "Today" must follow the calendar, not the moment this ViewModel was created.
+    private val dayTracker = TodayTracker(todayProvider)
+
+    private val _selectedDate = MutableStateFlow(dayTracker.today.value)
     val selectedDate: StateFlow<Long> = _selectedDate.asStateFlow()
 
     private val _isMonthlyView = MutableStateFlow(false)
@@ -56,6 +61,14 @@ class HistoryViewModel(
             repository.getWorkoutSessionsForRange(start, end)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    /**
+     * Call when the screen is shown again. If the day rolled over and the user was looking at "today",
+     * the selected date moves to the new day; a day they picked themselves is kept.
+     */
+    fun refreshToday() {
+        dayTracker.refreshAndFollow(_selectedDate)
+    }
 
     fun setViewMode(isMonthly: Boolean) {
         _isMonthlyView.value = isMonthly

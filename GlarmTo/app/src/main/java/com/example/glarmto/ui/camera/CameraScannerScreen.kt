@@ -34,7 +34,6 @@ import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.launch
-import java.util.concurrent.Executors
 
 enum class ScannerMode {
     BARCODE, OCR
@@ -51,6 +50,10 @@ fun CameraScannerScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
+
+    // Releases the camera, the ML Kit detectors and the analysis thread when this screen leaves.
+    val cameraSession = remember { CameraSession() }
+    DisposableEffect(cameraSession) { onDispose { cameraSession.close() } }
     
     var isProcessing by remember { mutableStateOf(false) }
     val barcodeGate = remember { BarcodeScanGate() }
@@ -97,6 +100,8 @@ fun CameraScannerScreen(
 
                     val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
                     cameraProviderFuture.addListener({
+                        // The screen may have been closed before the camera provider was ready.
+                        if (cameraSession.isClosed) return@addListener
                         val cameraProvider = cameraProviderFuture.get()
 
                         val preview = Preview.Builder().build().also {
@@ -109,12 +114,11 @@ fun CameraScannerScreen(
                             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                             .build()
 
-                        val barcodeScanner = BarcodeScanning.getClient()
-                        val textScanner = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
-                        val executor = Executors.newSingleThreadExecutor()
+                        val barcodeScanner = cameraSession.own(BarcodeScanning.getClient())
+                        val textScanner = cameraSession.own(TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS))
 
-                        imageAnalysis.setAnalyzer(executor) { imageProxy ->
-                            if (isProcessing) {
+                        imageAnalysis.setAnalyzer(cameraSession.analysisExecutor) { imageProxy ->
+                            if (cameraSession.isClosed || isProcessing) {
                                 imageProxy.close()
                                 return@setAnalyzer
                             }
@@ -175,6 +179,8 @@ fun CameraScannerScreen(
                                 preview,
                                 imageAnalysis
                             )
+                            val unbind = { cameraProvider.unbind(preview, imageAnalysis) }
+                            if (!cameraSession.onUnbind(unbind)) unbind()
                         } catch (exc: Exception) {
                             Log.e("Scanner", "Use case binding failed", exc)
                         }

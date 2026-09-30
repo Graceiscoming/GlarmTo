@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.glarmto.GlarmToApplication
+import com.example.glarmto.ui.util.OnResume
 import com.example.glarmto.data.util.CalorieBurnModel
 import com.example.glarmto.data.util.ExercisePresets
 import com.example.glarmto.data.util.NetworkUtil
@@ -187,6 +188,8 @@ fun WorkoutScreen() {
     val viewModel: WorkoutViewModel = viewModel(
         factory = WorkoutViewModelFactory(application.repository)
     )
+
+    OnResume { viewModel.refreshToday() }
 
     val workouts by viewModel.workouts.collectAsState()
     val selectedDate by viewModel.selectedDate.collectAsState()

@@ -1,0 +1,5 @@
+# Android build outputs
+**/build/
+.kotlin/
+.idea/caches/
+local.properties

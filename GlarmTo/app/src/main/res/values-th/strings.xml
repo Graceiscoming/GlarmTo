@@ -288,4 +288,10 @@
     <string name="f_ig_streak">สตรีค: %1$s วัน🔥</string>
     <string name="widget_title">GlarmTo 💪</string>
     <string name="widget_subtitle">วันนี้พร้อมลุยหรือยัง?</string>
+    <string name="barcode_not_found_offline">สินค้านี้ไม่อยู่ในรายการออฟไลน์ และไม่มีอินเทอร์เน็ตสำหรับค้นหาออนไลน์ ต้องการสแกนชิ้นอื่นต่อ หรือกรอกข้อมูลเอง?</string>
+    <string name="product_data_credit">ข้อมูลสินค้า: Open Food Facts (ODbL)</string>
+    <string name="scanned_product">สินค้าที่สแกน</string>
+    <string name="scanned_label">ฉลากที่สแกน</string>
+    <string name="per_100g_suffix">(ต่อ 100g)</string>
+    <string name="barcode_enter_calories_hint">พบสินค้า แต่ยังไม่มีข้อมูลโภชนาการ กรอกแคลอรี่จากซองแล้วระบบจะจำบาร์โค้ดนี้ไว้ให้</string>
 </resources>

@@ -288,4 +288,10 @@
     <string name="f_ig_streak">Streak: %1$s days🔥</string>
     <string name="widget_title">GlarmTo 💪</string>
     <string name="widget_subtitle">Ready to crush it today?</string>
+    <string name="barcode_not_found_offline">This product isn\'t in the offline list, and there is no internet to search online. Scan another item, or enter it yourself?</string>
+    <string name="product_data_credit">Product data: Open Food Facts (ODbL)</string>
+    <string name="scanned_product">Scanned product</string>
+    <string name="scanned_label">Scanned label</string>
+    <string name="per_100g_suffix">(per 100g)</string>
+    <string name="barcode_enter_calories_hint">Product found, but it has no nutrition facts yet. Enter the calories from the pack and the barcode will be remembered.</string>
 </resources>

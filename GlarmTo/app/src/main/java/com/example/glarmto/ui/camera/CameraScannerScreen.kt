@@ -27,7 +27,8 @@ import androidx.core.content.ContextCompat
 import com.example.glarmto.data.util.BarcodeNutrition
 import com.example.glarmto.data.util.BarcodeScanGate
 import com.example.glarmto.data.util.NutritionOcrParser
-import com.example.glarmto.data.util.OpenFoodFactsApi
+import com.example.glarmto.GlarmToApplication
+import com.example.glarmto.data.util.LookupResult
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -45,8 +46,10 @@ enum class ScannerMode {
 @Composable
 fun CameraScannerScreen(
     mode: ScannerMode,
-    onResult: (BarcodeNutrition) -> Unit,
-    onCancel: () -> Unit
+    onResult: (BarcodeNutrition, scannedBarcode: String?) -> Unit,
+    onCancel: () -> Unit,
+    /** The user chose to type an unknown product in themselves; the barcode is passed so it can be remembered. */
+    onEnterManually: (barcode: String) -> Unit = {}
 ) {
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
     val context = LocalContext.current
@@ -60,11 +63,15 @@ fun CameraScannerScreen(
     var isProcessing by remember { mutableStateOf(false) }
     val barcodeGate = remember { BarcodeScanGate() }
     var notFoundBarcode by remember { mutableStateOf<String?>(null) }
+    // True when the product wasn't in the offline data and the online search couldn't be reached.
+    var notFoundBecauseOffline by remember { mutableStateOf(false) }
+    val productLookup = remember { (context.applicationContext as GlarmToApplication).productLookup }
 
     // A "not found" barcode is already ignored by the gate; dismissing just re-opens scanning.
     val dismissNotFound = {
         barcodeGate.dismissNotFound()
         notFoundBarcode = null
+        notFoundBecauseOffline = false
         isProcessing = false
     }
 
@@ -72,9 +79,19 @@ fun CameraScannerScreen(
         AlertDialog(
             onDismissRequest = dismissNotFound,
             title = { Text(stringResource(R.string.product_not_found), fontWeight = androidx.compose.ui.text.font.FontWeight.Bold) },
-            text = { Text(stringResource(R.string.no_product_was_found_for_this_barcode_scan)) },
+            text = {
+                Text(
+                    stringResource(
+                        if (notFoundBecauseOffline) R.string.barcode_not_found_offline
+                        else R.string.no_product_was_found_for_this_barcode_scan
+                    )
+                )
+            },
             confirmButton = {
-                Button(onClick = { onCancel() }) { Text(stringResource(R.string.enter_manually)) }
+                Button(onClick = {
+                    notFoundBarcode?.let(onEnterManually)
+                    onCancel()
+                }) { Text(stringResource(R.string.enter_manually)) }
             },
             dismissButton = {
                 TextButton(onClick = dismissNotFound) { Text(stringResource(R.string.scan_another)) }
@@ -137,15 +154,18 @@ fun CameraScannerScreen(
                                                 if (rawValue != null && barcodeGate.tryBegin(rawValue)) {
                                                     isProcessing = true
                                                     coroutineScope.launch {
-                                                        val result = OpenFoodFactsApi.getNutritionByBarcode(rawValue)
-                                                        if (result != null) {
-                                                            barcodeGate.onFound()
-                                                            onResult(result)
-                                                        } else {
-                                                            // Stay "processing" until the dialog is dismissed so the camera
-                                                            // can't start another lookup behind it.
-                                                            barcodeGate.onNotFound(rawValue)
-                                                            notFoundBarcode = rawValue
+                                                        when (val result = productLookup.lookup(rawValue)) {
+                                                            is LookupResult.Found -> {
+                                                                barcodeGate.onFound()
+                                                                onResult(result.product, rawValue)
+                                                            }
+                                                            else -> {
+                                                                // Stay "processing" until the dialog is dismissed so the camera
+                                                                // can't start another lookup behind it.
+                                                                barcodeGate.onNotFound(rawValue)
+                                                                notFoundBecauseOffline = result is LookupResult.NotFoundOffline
+                                                                notFoundBarcode = rawValue
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -161,7 +181,7 @@ fun CameraScannerScreen(
                                                 // If we found some valid data
                                                 if (parsed.calories > 0 || parsed.protein > 0) {
                                                     isProcessing = true
-                                                    onResult(parsed)
+                                                    onResult(parsed, null)
                                                 }
                                             }
                                         }
@@ -213,12 +233,23 @@ fun CameraScannerScreen(
                     color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    Text(
-                        text = stringResource(if (mode == ScannerMode.BARCODE) R.string.point_at_food_barcode else R.string.point_at_nutrition_label),
-                        modifier = Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = stringResource(if (mode == ScannerMode.BARCODE) R.string.point_at_food_barcode else R.string.point_at_nutrition_label),
+                            modifier = Modifier.padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = if (mode == ScannerMode.BARCODE) 4.dp else 16.dp),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        if (mode == ScannerMode.BARCODE) {
+                            // Open Food Facts asks to be credited (ODbL).
+                            Text(
+                                text = stringResource(R.string.product_data_credit),
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
                 
                 if (isProcessing && notFoundBarcode == null) {

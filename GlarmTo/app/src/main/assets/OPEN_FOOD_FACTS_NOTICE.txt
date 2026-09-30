@@ -1,0 +1,18 @@
+Product data in thai_products.tsv
+
+Contains information from Open Food Facts (https://world.openfoodfacts.org), a free, community-built
+database of food products. It is made available under the Open Database License (ODbL) 1.0:
+https://opendatacommons.org/licenses/odbl/1-0/
+The individual contents of the database are made available under the Database Contents License (DbCL) 1.0:
+https://opendatacommons.org/licenses/dbcl/1-0/
+
+What this file is: a reduced extract of that database (products sold in Thailand, or with a barcode starting
+with 885, the GS1 prefix for Thailand), keeping only the barcode, name, brand, serving size, calories, protein,
+carbohydrate and fat per 100 g. It was produced by tools/build_thai_products.py from the public CSV export at
+https://static.openfoodfacts.org/data/en.openfoodfacts.org.products.csv.gz
+
+Under the ODbL this extract is itself available under the ODbL: you may copy, share and adapt it, as long as you
+credit Open Food Facts, say if you changed it, and keep it under the same license.
+
+The data is entered by volunteers and may contain mistakes or be out of date. Always check the label on the pack.
+To add or correct a product, contribute at https://world.openfoodfacts.org

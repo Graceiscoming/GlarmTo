@@ -2,8 +2,10 @@ package com.example.glarmto
 
 import android.Manifest
 import android.app.Application
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.test.core.app.ApplicationProvider
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -30,6 +32,13 @@ class AppManifestTest {
     fun `camera and internet are requested - scanner and barcode lookup need them`() {
         assertTrue(requested.contains(Manifest.permission.CAMERA))
         assertTrue(requested.contains(Manifest.permission.INTERNET))
+    }
+
+    @Test
+    fun `automatic backup is off - the database holds password hashes and all training data`() {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+
+        assertEquals(0, context.applicationInfo.flags and ApplicationInfo.FLAG_ALLOW_BACKUP)
     }
 
     @Test

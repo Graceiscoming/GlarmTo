@@ -22,6 +22,10 @@ interface GlarmToDao {
     @androidx.room.Update
     fun updateUser(user: UserEntity): Int
 
+    /** Changes only the password column, so it can't overwrite XP or profile changes made at the same time. */
+    @Query("UPDATE user_log SET password = :password WHERE username = :username")
+    fun updatePassword(username: String, password: String): Int
+
     @Query("SELECT * FROM user_log WHERE username = :username LIMIT 1")
     fun getUser(username: String): Flow<UserEntity?>
 

@@ -3,6 +3,7 @@ package com.example.glarmto
 import com.example.glarmto.data.local.entity.UserEntity
 import com.example.glarmto.data.local.entity.WorkoutEntity
 import com.example.glarmto.data.repository.GlarmToRepository
+import com.example.glarmto.data.util.PasswordHasher
 import com.example.glarmto.testsupport.MutableFakeSessionManager
 import com.example.glarmto.testsupport.RecordingFakeGlarmToDao
 import com.example.glarmto.testsupport.StaticFakeSessionManager
@@ -34,7 +35,7 @@ class GlarmToRepositoryTest {
         val success = repository.register("newuser", "mypass")
 
         assertTrue(success)
-        assertTrue(dao.insertedUsers.any { it.username == "newuser" && it.password == "mypass" })
+        assertTrue(dao.insertedUsers.any { it.username == "newuser" && PasswordHasher.verify("mypass", it.password) })
         assertFalse(session.isProfileSetup())
     }
 

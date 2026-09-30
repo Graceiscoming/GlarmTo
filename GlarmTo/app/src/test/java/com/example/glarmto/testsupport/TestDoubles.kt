@@ -26,6 +26,7 @@ open class RecordingFakeGlarmToDao : GlarmToDao {
     val updatedSessions = mutableListOf<WorkoutSessionEntity>()
     val insertedRoutines = mutableListOf<RoutineEntity>()
     val insertedWater = mutableListOf<WaterEntity>()
+    val passwordUpdates = mutableListOf<Pair<String, String>>()
     var nextSessionId: Long = 1L
 
     override fun getUser(username: String): Flow<UserEntity?> = mockUserFlow
@@ -39,6 +40,15 @@ open class RecordingFakeGlarmToDao : GlarmToDao {
     override fun updateUser(user: UserEntity): Int {
         lastUpdatedUser = user
         mockUserFlow.value = user
+        return 1
+    }
+
+    override fun updatePassword(username: String, password: String): Int {
+        passwordUpdates.add(username to password)
+        val current = mockUserFlow.value
+        if (current != null && current.username == username) {
+            mockUserFlow.value = current.copy(password = password) // only the password changes
+        }
         return 1
     }
 

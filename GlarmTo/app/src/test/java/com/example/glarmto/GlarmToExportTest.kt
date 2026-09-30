@@ -5,6 +5,8 @@ import com.example.glarmto.data.local.entity.UserEntity
 import com.example.glarmto.data.local.entity.WaterEntity
 import com.example.glarmto.data.local.entity.WorkoutEntity
 import com.example.glarmto.data.util.GlarmToExport
+import com.example.glarmto.data.util.PasswordHasher
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -65,5 +67,16 @@ class GlarmToExportTest {
             water = listOf(WaterEntity(1, "a,b", 3L, 250))
         )
         assertTrue(csv.contains("water,1,\"a,b\",3,250"))
+    }
+
+    @Test
+    fun `toJson never includes the password or its hash`() {
+        val user = UserEntity(username = "u1", password = PasswordHasher.hash("topsecret", iterations = 2))
+
+        val json = GlarmToExport.toJson("u1", user, emptyList(), emptyList(), emptyList())
+
+        assertFalse(json.contains("topsecret"))
+        assertFalse(json.contains("pbkdf2"))
+        assertFalse(json.lowercase().contains("password"))
     }
 }

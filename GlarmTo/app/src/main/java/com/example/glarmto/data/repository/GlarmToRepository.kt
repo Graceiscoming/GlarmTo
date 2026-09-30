@@ -8,6 +8,7 @@ import com.example.glarmto.data.local.entity.WaterEntity
 import com.example.glarmto.data.local.entity.WorkoutEntity
 import com.example.glarmto.data.util.GlarmToExport
 import com.example.glarmto.data.util.LevelMath
+import com.example.glarmto.data.util.PasswordHasher
 import com.example.glarmto.data.preferences.SessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -28,7 +29,11 @@ data class PeriodTrainingStats(val totalVolume: Double, val totalSets: Int)
  * It encapsulates all complex business logic related to XP calculation, 
  * level progression, streaks, and data export.
  */
-class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager: SessionManager) {
+class GlarmToRepository(
+    private val dao: GlarmToDao,
+    private val sessionManager: SessionManager,
+    private val passwordIterations: Int = PasswordHasher.DEFAULT_ITERATIONS
+) {
 
     companion object {
         private const val DAY_MS = 24L * 60 * 60 * 1000
@@ -339,29 +344,62 @@ class GlarmToRepository(private val dao: GlarmToDao, private val sessionManager:
             if (user != null) {
                 false // User already exists
             } else {
-                val newUser = UserEntity(username = username, password = password)
-                dao.insertUser(newUser)
-                sessionManager.loginUser(username)
-                sessionManager.setProfileSetup(false)
-                true
+                val newUser = UserEntity(username = username, password = PasswordHasher.hash(password, passwordIterations))
+                // The insert ignores an existing username, which also catches two quick taps on Register.
+                if (dao.insertUser(newUser) == -1L) {
+                    false
+                } else {
+                    sessionManager.loginUser(username)
+                    sessionManager.setProfileSetup(false)
+                    true
+                }
             }
         }
     }
 
+    /**
+     * Checks the password and logs in. Passwords are stored hashed ([PasswordHasher]). Two older
+     * formats are still accepted and upgraded to a hash on the first successful login:
+     *  - plaintext passwords saved by earlier versions;
+     *  - accounts from before passwords existed (empty stored password): the first non-empty
+     *    password used becomes the account's password, instead of any password working forever.
+     */
     suspend fun login(username: String, password: String): Boolean {
         return withContext(Dispatchers.IO) {
-            val user = dao.getUser(username).firstOrNull()
-            // Check backward compatibility too: if DB migrated from older versions, password string is empty
-            if (user != null && (user.password == password || user.password.isEmpty())) {
+            val user = dao.getUser(username).firstOrNull() ?: return@withContext false
+            val stored = user.password
+            val accepted = when {
+                PasswordHasher.isHashed(stored) -> {
+                    val match = PasswordHasher.verify(password, stored)
+                    if (match && PasswordHasher.needsRehash(stored, passwordIterations)) storeHash(username, password)
+                    match
+                }
+                stored.isEmpty() -> {
+                    if (password.isEmpty()) {
+                        false
+                    } else {
+                        storeHash(username, password)
+                        true
+                    }
+                }
+                else -> {
+                    val match = PasswordHasher.constantTimeEquals(stored, password)
+                    if (match) storeHash(username, password)
+                    match
+                }
+            }
+            if (accepted) {
                 sessionManager.loginUser(username)
                 sessionManager.setProfileSetup(user.profileSetup)
-                true
-            } else {
-                false // User not found or incorrect password
             }
+            accepted
         }
     }
-    
+
+    private fun storeHash(username: String, password: String) {
+        dao.updatePassword(username, PasswordHasher.hash(password, passwordIterations))
+    }
+
     fun getUserFlow(): Flow<UserEntity?> {
         val username = sessionManager.getCurrentUser() ?: return emptyFlow()
         return dao.getUser(username)

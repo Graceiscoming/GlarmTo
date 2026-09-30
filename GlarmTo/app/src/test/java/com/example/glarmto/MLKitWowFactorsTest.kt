@@ -78,6 +78,14 @@ class MLKitWowFactorsTest {
     }
 
     @Test
+    fun testNutritionOcrParser_missingValueDoesNotBorrowNextRowsNumber() {
+        val parsed = NutritionOcrParser.parseNutritionFromLabel("Protein\nCarbs 30")
+
+        assertEquals("Protein has no number of its own", 0, parsed.protein)
+        assertEquals(30, parsed.carbs)
+    }
+
+    @Test
     fun testNutritionOcrParser_roundsDecimals() {
         val parsed = NutritionOcrParser.parseNutritionFromLabel("Protein 5.6g")
 

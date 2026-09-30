@@ -12,15 +12,23 @@ object NutritionOcrParser {
         "(?i)(?:saturated|trans|poly\\w*|mono\\w*)\\s*fat|calories\\s*from\\s*fat|ไขมัน(?:อิ่มตัว|ทรานส์)"
     )
 
+    // The gap between a label and its number may not run into another nutrient's label, so a row with a
+    // missing value ("Protein" then "Carbs 30") doesn't borrow the next row's number.
+    private const val GAP_TO_NUMBER =
+        "(?:(?!protein|carb|fat|energy|calories|kcal|โปรตีน|คาร์|ไขมัน|พลังงาน|แคลอรี)\\D){0,20}?"
+    private const val GAP_TO_ENERGY_NUMBER =
+        "(?:(?!protein|carb|fat|โปรตีน|คาร์|ไขมัน)\\D){0,20}?"
+
     // รองรับทั้งฉลากภาษาอังกฤษ และฉลากโภชนาการภาษาไทย
-    private val proteinRegex = Regex("(?i)(?:protein|โปรตีน)\\D{0,20}?$NUMBER")
-    private val carbsRegex = Regex("(?i)(?:carb|คาร์โบไฮเดรต|คาร์บ)\\D{0,20}?$NUMBER")
-    private val totalFatRegex = Regex("(?i)(?:total\\s*fat|ไขมันทั้งหมด)\\D{0,20}?$NUMBER")
-    private val fatRegex = Regex("(?i)(?:fat|ไขมัน)\\D{0,20}?$NUMBER")
+    private val proteinRegex = Regex("(?i)(?:protein|โปรตีน)$GAP_TO_NUMBER$NUMBER")
+    private val carbsRegex = Regex("(?i)(?:carb|คาร์โบไฮเดรต|คาร์บ)$GAP_TO_NUMBER$NUMBER")
+    private val totalFatRegex = Regex("(?i)(?:total\\s*fat|ไขมันทั้งหมด)$GAP_TO_NUMBER$NUMBER")
+    private val fatRegex = Regex("(?i)(?:fat|ไขมัน)$GAP_TO_NUMBER$NUMBER")
 
     // "290 kcal" wins over "Energy 1200 kJ / 290 kcal": label energy is often listed in kJ first.
     private val kcalValueRegex = Regex("(?i)$NUMBER\\s*(?:kcal|กิโลแคลอรี)")
-    private val energyRegex = Regex("(?i)(?:energy|calories|kcal|พลังงาน|แคลอรี)\\D{0,20}?$NUMBER\\s*(kj|กิโลจูล)?")
+    private val energyRegex =
+        Regex("(?i)(?:energy|calories|kcal|พลังงาน|แคลอรี)$GAP_TO_ENERGY_NUMBER$NUMBER\\s*(kj|กิโลจูล)?")
 
     /**
      * Scans a block of text recognized by ML Kit OCR and attempts to extract

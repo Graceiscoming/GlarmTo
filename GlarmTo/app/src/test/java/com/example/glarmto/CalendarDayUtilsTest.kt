@@ -11,6 +11,24 @@ import java.util.TimeZone
 class CalendarDayUtilsTest {
 
     @Test
+    fun `nutrition editable range ends at last millisecond of day 8 across a DST change`() {
+        val original = TimeZone.getDefault()
+        try {
+            // 2025-11-02 is a 25-hour day in New York (clocks go back).
+            TimeZone.setDefault(TimeZone.getTimeZone("America/New_York"))
+            val start = Calendar.getInstance().apply { clear(); set(2025, Calendar.NOVEMBER, 2) }.timeInMillis
+            val expectedEnd = Calendar.getInstance().apply { clear(); set(2025, Calendar.NOVEMBER, 10) }.timeInMillis - 1
+
+            val (rangeStart, rangeEnd) = CalendarDayUtils.nutritionEditableLocalRange(start)
+
+            assertEquals(start, rangeStart)
+            assertEquals(expectedEnd, rangeEnd)
+        } finally {
+            TimeZone.setDefault(original)
+        }
+    }
+
+    @Test
     fun `normalizeToLocalDayStart is idempotent`() {
         val raw = Calendar.getInstance().apply {
             set(2026, Calendar.MARCH, 10, 15, 30, 45)

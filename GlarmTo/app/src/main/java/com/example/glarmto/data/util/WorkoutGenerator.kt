@@ -61,7 +61,8 @@ object WorkoutGenerator {
         equipmentConstraints: List<Equipment>,
         focusMuscles: List<MuscleGroup>,
         context: AiGeneratorContext = AiGeneratorContext(),
-        now: Long = System.currentTimeMillis()
+        now: Long = System.currentTimeMillis(),
+        random: Random = Random.Default
     ): GeneratedWorkout {
         val muscleRecovery = context.muscleRecovery
         val exerciseHistory = context.exerciseHistory
@@ -98,7 +99,7 @@ object WorkoutGenerator {
         if (focusMuscles.isNotEmpty()) {
             for (muscle in focusMuscles) {
                 val exerciseForMuscle = weightedPick(
-                    poolGroups[muscle] ?: emptyList(), muscleRecovery, exerciseHistory, weeklyMuscleSets, now
+                    poolGroups[muscle] ?: emptyList(), muscleRecovery, exerciseHistory, weeklyMuscleSets, now, random
                 )
                 if (exerciseForMuscle != null) {
                     selectedExercises.add(exerciseForMuscle)
@@ -110,7 +111,7 @@ object WorkoutGenerator {
         val remainingCandidates = pool.filter { !selectedExercises.contains(it) }.toMutableList()
         val needed = targetNumExercises - selectedExercises.size
         repeat(needed.coerceAtLeast(0)) {
-            val picked = weightedPick(remainingCandidates, muscleRecovery, exerciseHistory, weeklyMuscleSets, now) ?: return@repeat
+            val picked = weightedPick(remainingCandidates, muscleRecovery, exerciseHistory, weeklyMuscleSets, now, random) ?: return@repeat
             selectedExercises.add(picked)
             remainingCandidates.remove(picked)
         }
@@ -127,7 +128,7 @@ object WorkoutGenerator {
         }
 
         // Shuffle the final list for variety
-        selectedExercises.shuffle(Random(System.currentTimeMillis()))
+        selectedExercises.shuffle(random)
 
         // 4. Determine volume (sets and reps), blended with what the user actually tends to
         // complete per exercise (if we know it) rather than the time budget alone.
@@ -197,7 +198,8 @@ object WorkoutGenerator {
         muscleRecovery: Map<MuscleGroup, Float>,
         exerciseHistory: Map<String, ExerciseHistoryStats>,
         weeklyMuscleSets: Map<MuscleGroup, Int>,
-        now: Long
+        now: Long,
+        random: Random
     ): ExerciseDef? {
         if (candidates.isEmpty()) return null
         val avgWeeklySets = weeklyMuscleSets.values.average().takeIf { !it.isNaN() } ?: 0.0
@@ -220,7 +222,7 @@ object WorkoutGenerator {
                 1f
             }
 
-            recoveryWeight * varietyWeight * balanceWeight * Random.nextFloat()
+            recoveryWeight * varietyWeight * balanceWeight * random.nextFloat()
         }
     }
 
@@ -239,6 +241,11 @@ object WorkoutGenerator {
         if (history == null) {
             val note = if (def.equipment == Equipment.Bodyweight) null else "First time on this one — start light and find your weight."
             return null to note
+        }
+
+        // Pure bodyweight work has no load to bump or deload; progress is reps only.
+        if (def.equipment == Equipment.Bodyweight && history.lastWeight <= 0.0) {
+            return null to "Last time: ${history.lastReps} reps — try to beat it."
         }
 
         val repRangeTop = targetReps.substringAfterLast("-").toIntOrNull()

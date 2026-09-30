@@ -18,6 +18,9 @@ object RecoveryCalculator {
         val muscleLastHitMap = mutableMapOf<MuscleGroup, Long>()
 
         for (w in workouts) {
+            // Sets older than the recovery window are already fully healed; counting them would
+            // make old history keep a muscle looking fatigued.
+            if (now - w.dateInMillis > RECOVERY_WINDOW_MS) continue
             val muscle = ExerciseLibrary.getMuscleFor(w.exerciseName) ?: continue
             val currentDamage = muscleDamageMap.getOrDefault(muscle, 0f)
             muscleDamageMap[muscle] = (currentDamage + DAMAGE_PER_SET).coerceAtMost(1.0f)

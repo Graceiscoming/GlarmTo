@@ -50,9 +50,13 @@ object CalendarDayUtils {
     }
 
     /** Inclusive range for nutrition editing: today .. today+7 local days (matches existing window). */
-    fun nutritionEditableLocalRange(): Pair<Long, Long> {
-        val todayStart = localTodayStartMillis()
-        val end = todayStart + (8 * 24 * 60 * 60 * 1000L) - 1
+    fun nutritionEditableLocalRange(todayStart: Long = localTodayStartMillis()): Pair<Long, Long> {
+        // Step by calendar days, not 24h blocks, so a daylight-saving change day doesn't shift the end by an hour.
+        val end = Calendar.getInstance().apply {
+            timeInMillis = todayStart
+            add(Calendar.DAY_OF_YEAR, 8)
+            add(Calendar.MILLISECOND, -1)
+        }.timeInMillis
         return Pair(todayStart, end)
     }
 

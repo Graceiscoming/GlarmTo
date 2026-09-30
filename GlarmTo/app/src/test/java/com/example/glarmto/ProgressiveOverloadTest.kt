@@ -41,6 +41,32 @@ class ProgressiveOverloadTest {
     }
 
     @Test
+    fun `bodyweight exercise gets no weight suggestion or zero kg deload note`() {
+        val pushups = ExerciseDef("Pushups", MuscleGroup.Chest, Equipment.Bodyweight)
+        val stalled = ExerciseHistoryStats(
+            lastWeight = 0.0,
+            lastReps = 12,
+            maxWeight = 0.0,
+            lastPerformedMillis = 0L,
+            recentSets = listOf(0.0 to 12, 0.0 to 12, 0.0 to 12)
+        )
+
+        val (weight, note) = WorkoutGenerator.progressiveOverload(pushups, "15-20", stalled)
+
+        assertEquals(null, weight)
+        assertFalse(note!!.contains("0.0kg"))
+    }
+
+    @Test
+    fun `weighted bodyweight exercise still uses the weight rules`() {
+        val dips = ExerciseDef("Dips", MuscleGroup.Chest, Equipment.Bodyweight)
+
+        val (weight, _) = WorkoutGenerator.progressiveOverload(dips, "15-20", history(10.0, 20))
+
+        assertEquals(11.25, weight!!, 0.001)
+    }
+
+    @Test
     fun `no bump when rep range top was not hit`() {
         val (weight, note) = WorkoutGenerator.progressiveOverload(bench, "8-12", history(40.0, 9))
 

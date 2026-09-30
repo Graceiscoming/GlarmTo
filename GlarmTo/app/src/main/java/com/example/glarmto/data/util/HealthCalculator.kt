@@ -4,14 +4,19 @@ import kotlin.math.roundToInt
 
 object HealthCalculator {
     /**
-     * Calculates Total Daily Energy Expenditure (TDEE) based on Mifflin-St Jeor formula
-     * and assumes a moderate activity level (multiplier of 1.55).
-     * 
+     * Calculates Total Daily Energy Expenditure (TDEE) from the Mifflin-St Jeor BMR, scaled by an
+     * activity multiplier chosen from [workoutDays], then shifted for the [goal].
+     *
+     * Activity multiplier: 0-1 days = 1.2, 2-3 = 1.375, 4-5 = 1.55, 6+ = 1.725.
+     * Goal: "Cut" subtracts 400 kcal (never below 1200), "Bulk" adds 400 kcal, anything else is maintenance.
+     *
      * @param age User's age in years
      * @param weight User's weight in kilograms
      * @param height User's height in centimeters
      * @param isMale True if male, false if female
-     * @return The daily calorie goal (maintenance TDEE) rounded to the nearest integer.
+     * @param workoutDays Training days per week
+     * @param goal "Cut", "Bulk", or "Maintain"
+     * @return The daily calorie goal rounded to the nearest integer, or 2000 if the inputs are invalid.
      */
     fun calculateTdee(age: Int, weight: Double, height: Double, isMale: Boolean, workoutDays: Int = 3, goal: String = "Maintain"): Int {
         if (age <= 0 || weight <= 0.0 || height <= 0.0) return 2000 // Default fallback

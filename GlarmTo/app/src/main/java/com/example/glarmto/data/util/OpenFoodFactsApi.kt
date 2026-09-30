@@ -1,5 +1,6 @@
 package com.example.glarmto.data.util
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -7,6 +8,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 
 data class BarcodeNutrition(
     val productName: String,
@@ -24,7 +26,7 @@ object OpenFoodFactsApi {
      */
     suspend fun getNutritionByBarcode(barcode: String): BarcodeNutrition? = withContext(Dispatchers.IO) {
         try {
-            val url = URL("$BASE_URL$barcode.json")
+            val url = URL("$BASE_URL${URLEncoder.encode(barcode, "UTF-8")}.json")
             val connection = url.openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000
@@ -39,33 +41,41 @@ object OpenFoodFactsApi {
                 }
                 reader.close()
 
-                val jsonResponse = JSONObject(response.toString())
-                if (jsonResponse.getInt("status") == 1) {
-                    val product = jsonResponse.getJSONObject("product")
-                    val nutriments = product.optJSONObject("nutriments")
-                    
-                    if (nutriments != null) {
-                        // Prioritize per-serving data over 100g, as 100g doesn't usually match the box
-                        val calories = nutriments.optDouble("energy-kcal_serving", nutriments.optDouble("energy-kcal_100g", 0.0)).toInt()
-                        val protein = nutriments.optDouble("proteins_serving", nutriments.optDouble("proteins_100g", 0.0)).toInt()
-                        val carbs = nutriments.optDouble("carbohydrates_serving", nutriments.optDouble("carbohydrates_100g", 0.0)).toInt()
-                        val fats = nutriments.optDouble("fat_serving", nutriments.optDouble("fat_100g", 0.0)).toInt()
-
-                        return@withContext BarcodeNutrition(
-                            productName = product.optString("product_name", "Unknown Product"),
-                            calories = calories,
-                            protein = protein,
-                            carbs = carbs,
-                            fats = fats
-                        )
-                    }
-                }
+                parseProduct(JSONObject(response.toString()))?.let { return@withContext it }
             }
+        } catch (e: CancellationException) {
+            // A cancelled scan must stop here, not fall through to the offline lookup.
+            throw e
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        
+
         // 🚨 Fallback: ถ้า API ไม่เจอ ให้ลองค้นหาในคลังข้อมูลจำลองของแอป (Database 7-11 ของเราเอง!)
         return@withContext ThaiProductDatabase.database[barcode]
+    }
+
+    /**
+     * Maps an OpenFoodFacts response to [BarcodeNutrition], or null if the product or its nutrition data is missing.
+     *
+     * Prefers per-serving values, as 100g doesn't usually match the box. All four macros use the same basis
+     * (mixing serving and 100g values would be wrong), and when only per-100g data exists the product name is
+     * tagged "(per 100g)" so the user knows the numbers aren't for one serving.
+     */
+    internal fun parseProduct(jsonResponse: JSONObject): BarcodeNutrition? {
+        if (jsonResponse.optInt("status") != 1) return null
+        val product = jsonResponse.optJSONObject("product") ?: return null
+        val nutriments = product.optJSONObject("nutriments") ?: return null
+
+        val hasServing = nutriments.has("energy-kcal_serving")
+        val suffix = if (hasServing) "_serving" else "_100g"
+
+        val name = product.optString("product_name", "").ifBlank { "Unknown Product" }
+        return BarcodeNutrition(
+            productName = if (hasServing) name else "$name (per 100g)",
+            calories = nutriments.optDouble("energy-kcal$suffix", 0.0).toInt(),
+            protein = nutriments.optDouble("proteins$suffix", 0.0).toInt(),
+            carbs = nutriments.optDouble("carbohydrates$suffix", 0.0).toInt(),
+            fats = nutriments.optDouble("fat$suffix", 0.0).toInt()
+        )
     }
 }
